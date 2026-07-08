@@ -22,7 +22,7 @@
             display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 15px; position: relative; z-index: 10;
         }
 
-        /* 💻 電腦版：標準科幻網格 */
+        /* 電腦版：標準科幻網格 */
         .hud-screen {
             position: relative; width: 95vw; max-width: 850px; min-height: 650px;
             background: rgba(4, 10, 15, 0.9); border: 2px solid rgba(0, 240, 255, 0.3);
@@ -81,22 +81,22 @@
         }
         .panel-sync-btn:hover { background: #fff; color: #000; box-shadow: 0 0 15px #00ffaa; }
 
-        /* 📱 📱 📱 終極手機直向優化（Responsive RWD） */
+        /* 手機直向優化（Responsive RWD） */
         @media (max-width: 600px) {
             .main-container { padding: 10px; align-items: flex-start; }
             .hud-screen {
-                display: flex; flex-direction: column; /* 改為單欄垂直垂直排列 */
+                display: flex; flex-direction: column; 
                 width: 100%; min-height: auto; height: auto; padding: 15px; gap: 15px;
             }
             .top-left-panel { order: 1; }
-            .mid-left-panel { order: 3; min-height: 18px; padding: 15px 10px; } /* 狀態條空間優化 */
+            .mid-left-panel { order: 3; min-height: 18px; padding: 15px 10px; } 
             .v-bar-outer { min-height: 120px; }
-            .center-core { order: 2; padding: 10px 0; } /* 雷達移到中上部點綴 */
+            .center-core { order: 2; padding: 10px 0; } 
             .radar-group { max-width: 120px; }
-            .top-right-panel { order: 4; clip-path: none; min-height: auto; } /* 解策區移到中下部 */
-            .bottom-left-panel { display: none; } /* 手機版隱藏沒裝飾的空框 */
-            .bottom-right-panel { order: 5; clip-path: none; margin-top: 5px; } /* 重整區固定在最底部 */
-            .panel-sync-btn { padding: 12px 0; font-size: 15px; } /* 手機按鈕放大更好按 */
+            .top-right-panel { order: 4; clip-path: none; min-height: auto; } 
+            .bottom-left-panel { display: none; } 
+            .bottom-right-panel { order: 5; clip-path: none; margin-top: 5px; } 
+            .panel-sync-btn { padding: 12px 0; font-size: 15px; } 
         }
 
         /* 主持人介面 */
@@ -184,6 +184,9 @@
         const teamKey = urlParams.get('team') || 'A';
         const mainView = document.getElementById('mainView');
 
+        let isSubmitting = false;
+
+        // 🚀 強制寫入雲端：插隊發送，不等待計時器
         async function saveState() {
             try {
                 await fetch(API_URL, {
@@ -194,7 +197,9 @@
             } catch (e) {}
         }
 
+        // 🛰️ 從雲端拉取最新狀態（增加防重複鎖，降低伺服器堵塞）
         async function fetchState() {
+            if (isSubmitting) return; 
             try {
                 const res = await fetch(`${API_URL}?t=${Date.now()}`);
                 if (res.ok) {
@@ -208,10 +213,11 @@
             } catch (e) {}
         }
 
+        // ⚡ 點擊立刻插隊連線，零延遲同步
         async function triggerManualSync() {
             const btn = document.getElementById('panelSyncBtn');
             if(btn) {
-                btn.innerText = "⏳ 同步中...";
+                btn.innerText = "⏳ 零延遲同步中...";
                 btn.style.background = "#ff7300";
             }
             await fetchState();
@@ -222,12 +228,13 @@
                     setTimeout(() => {
                         btn.innerText = "⚡ 強制重整";
                         btn.style.background = "#00ffaa";
-                    }, 800);
+                    }, 600);
                 }
-            }, 300);
+            }, 200);
         }
 
-        setInterval(fetchState, 500);
+        // 🧠 關鍵優化：降低背景頻率至 1.5秒，避免伺服器罷工排隊
+        setInterval(fetchState, 1500);
 
         if (mode === 'host') {
             document.getElementById('mainContainer').style.display = "block";
@@ -322,14 +329,17 @@
                         </div>
                     </div>
                     <div class="bottom-right-panel">
-                        <div class="status-line"><span>ROUND: 0${rIdx} / 04</span><span>MATRIX: CON.</span></div>
+                        <div class="status-line"><span>ROUND: 0${rIdx} / 04</span><span>MATRIX: LIVE</span></div>
                         <button class="panel-sync-btn" id="panelSyncBtn" onclick="triggerManualSync()">⚡ 強制重整</button>
                     </div>
                 </div>
             `;
         }
 
-        function executeMatrixChoice(choiceType) {
+        async function executeMatrixChoice(choiceType) {
+            if(isSubmitting) return;
+            isSubmitting = true;
+
             const rIdx = systemState.currentRound;
             const rData = systemState.rounds[rIdx];
             const turnOrder = [rData.w1, rData.w2, rData.l1, rData.l2];
@@ -393,7 +403,8 @@
             systemState.logs.unshift(`[R${rIdx}-順位${rData.currentTurnIdx}] ${logDesc}`);
 
             renderTeamView(); 
-            saveState();
+            await saveState(); // 強制即時上傳
+            isSubmitting = false;
         }
 
         function renderHostView() {
@@ -407,7 +418,7 @@
             mainView.innerHTML = `
                 <div class="host-screen">
                     <div class="host-top-bar">
-                        <div class="host-header">🌌 量子核心主控台 <span class="sync-indicator">📡 雲端即時連線中</span></div>
+                        <div class="host-header">🌌 量子核心主控台 <span class="sync-indicator">📡 高速零延遲通道已優化</span></div>
                         <div style="display:flex; gap:10px;">
                            <button class="reset-btn" onclick="resetSystem()">🚨 RESET</button>
                         </div>
@@ -513,13 +524,13 @@
             `;
         }
 
-        function switchRound(num) {
+        async function switchRound(num) {
             systemState.currentRound = num;
             renderHostView();
-            saveState();
+            await saveState();
         }
 
-        function applyRoundSettings() {
+        async function applyRoundSettings() {
             const rIdx = systemState.currentRound;
             systemState.rounds[rIdx].status = '連鎖選擇中';
             systemState.rounds[rIdx].w1 = document.getElementById('w1').value;
@@ -532,24 +543,24 @@
             systemState.logs.unshift(`[系統通知] 第 0${rIdx} 輪順位發布。控制權移交給【${n_w1}】。`);
             
             renderHostView();
-            saveState();
+            await saveState(); // 主持人端點擊，立刻廣播
         }
 
-        function forceNextTurn() {
+        async function forceNextTurn() {
             const rIdx = systemState.currentRound;
             if (systemState.rounds[rIdx].currentTurnIdx < 4) {
                 systemState.rounds[rIdx].currentTurnIdx++;
                 systemState.logs.unshift(`[管理介入] 主持人手動跳過目前順位。`);
                 renderHostView();
-                saveState();
+                await saveState(); // 立刻插隊同步
             }
         }
 
-        function resetSystem() {
+        async function resetSystem() {
             if(confirm("🚨 確定要強制重製雲端系統嗎？")) {
                 systemState = JSON.parse(JSON.stringify(initialSystemState));
                 renderHostView();
-                saveState();
+                await saveState();
             }
         }
     </script>
