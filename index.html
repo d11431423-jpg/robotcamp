@@ -3,278 +3,322 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CRITICAL LINKAGE: QUANTUM CORE</title>
+    <title>HUD TACTICAL INTERFACE</title>
     <style>
-        /* 全域賽博朋克底色 */
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', Courier, monospace, "微軟正黑體"; }
-        body, html { width: 100%; height: 100%; background-color: #050508; color: #00f0ff; overflow: hidden; position: relative; }
+        body, html { width: 100%; height: 100%; background-color: #03070a; color: #00f0ff; overflow: hidden; position: relative; }
         
-        /* CRT 掃描線與暗角特效 */
+        /* CRT 螢幕掃描線與暗角，營造玻璃面板質感 */
         body::before {
             content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            z-index: 999; background-size: 100% 4px, 3px 100%; pointer-events: none;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.3) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.04), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.04));
+            z-index: 999; background-size: 100% 4px, 6px 100%; pointer-events: none;
         }
         body::after {
             content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
-            background: radial-gradient(circle, rgba(0,0,0,0) 60%, rgba(0,0,0,0.8) 100%); z-index: 998; pointer-events: none;
+            background: radial-gradient(circle, rgba(0,0,0,0) 40%, rgba(3,7,10,0.85) 100%); z-index: 998; pointer-events: none;
         }
 
-        /* 背景 Canvas */
-        #particleCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; opacity: 0.4; }
+        /* 宇宙深空微弱粒子星空 */
+        #particleCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; opacity: 0.3; }
 
-        /* 主玻璃面板 */
-        .hud-container {
-            position: absolute; top: 5%; left: 5%; width: 90%; height: 90%; z-index: 10;
-            background: rgba(10, 15, 24, 0.65);
-            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-            border: 1px solid rgba(0, 240, 255, 0.3);
-            box-shadow: 0 0 20px rgba(0, 240, 255, 0.15), inset 0 0 15px rgba(0, 240, 255, 0.1);
-            clip-path: polygon(0 0, 95% 0, 100% 5%, 100% 100%, 5% 100%, 0 95%);
-            display: grid; padding: 20px; gap: 20px;
+        /* 核心 HUD 容器：完美還原照片中的正方形半透明主面板 */
+        .hud-screen {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 95vw; height: 95vw; max-width: 900px; max-height: 900px; z-index: 10;
+            background: rgba(8, 16, 24, 0.5);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 240, 255, 0.25);
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.1), inset 0 0 20px rgba(0, 240, 255, 0.05);
+            display: grid;
+            grid-template-columns: 1.21fr 2fr 1.2fr;
+            grid-template-rows: 1fr 1.8fr 1.2fr;
+            padding: 30px; gap: 20px;
         }
 
-        /* 隊員端佈局 (HUD 圖片還原) */
-        .team-layout { grid-template-columns: 1fr 2fr 1.5fr; grid-template-rows: 1fr 2fr; height: 100%; }
+        /* 科技裝飾邊角線條 (SVG 疊加) */
+        .hud-border-svg {
+            position: absolute; top: -1px; left: -1px; width: calc(100% + 2px); height: calc(100% + 2px);
+            pointer-events: none; stroke: #00f0ff; fill: none; stroke-width: 1.5; opacity: 0.8; filter: drop-shadow(0 0 4px #00f0ff);
+        }
 
-        /* 左側能量條 */
-        .status-bars { grid-row: 1 / span 2; display: flex; flex-direction: column; justify-content: space-around; padding-right: 10px; }
-        .bar-container { display: flex; flex-direction: column; gap: 5px; }
-        .bar-label { font-size: 14px; font-weight: bold; text-shadow: 0 0 5px currentColor; display: flex; justify-content: space-between;}
-        .bar-outer { width: 100%; height: 25px; border: 1px solid rgba(0, 240, 255, 0.5); padding: 2px; background: rgba(0,0,0,0.4); position: relative; }
-        .bar-inner { height: 100%; background: #00f0ff; width: 70%; transition: width 0.8s cubic-bezier(0.1, 0.8, 0.3, 1); box-shadow: 0 0 10px currentColor; }
-        .bar-grid { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(90deg, transparent 85%, rgba(5,5,8,0.7) 85%); background-size: 8% 100%; }
+        /* 左上區塊：科技長條裝飾框 */
+        .top-left-panel { grid-column: 1; grid-row: 1; position: relative; display: flex; align-items: center; }
 
-        /* 中央雷達與徽章 */
-        .center-radar { grid-row: 1 / span 2; display: flex; justify-content: center; align-items: center; position: relative; }
-        .radar-svg { width: 85%; height: 85%; animation: rotateRadar 20s linear infinite; opacity: 0.7; }
+        /* 左中區塊：雙垂直數碼方格能量條 */
+        .mid-left-panel { grid-column: 1; grid-row: 2; display: flex; gap: 20px; align-items: center; justify-content: center; padding-left: 10px; }
+        .vertical-bar-container { display: flex; flex-direction: column; align-items: center; gap: 8px; height: 90%; }
+        .v-bar-label { font-size: 11px; font-weight: bold; text-shadow: 0 0 5px currentColor; letter-spacing: 1px; }
+        .v-bar-outer { width: 22px; height: 100%; border: 1px solid rgba(0, 240, 255, 0.4); padding: 2px; background: rgba(0,0,0,0.5); position: relative; }
+        .v-bar-inner { width: 100%; background: #00f0ff; position: absolute; bottom: 2px; left: 2px; width: calc(100% - 4px); transition: height 0.8s cubic-bezier(0.1, 0.8, 0.3, 1); box-shadow: 0 0 8px currentColor; }
+        .v-bar-grid { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(0deg, transparent 75%, #03070a 75%); background-size: 100% 12px; }
+
+        /* 左下區塊：雷達小點矩陣地圖 */
+        .bottom-left-panel { grid-column: 1; grid-row: 3; border: 1px solid rgba(0, 240, 255, 0.2); background: rgba(0,0,0,0.2); position: relative; overflow: hidden; }
+
+        /* 中央核心：多層旋轉雷達 + 古典徽章全息投影 */
+        .center-core { grid-column: 2; grid-row: 1 / span 3; display: flex; justify-content: center; align-items: center; position: relative; }
+        .radar-group { position: absolute; width: 95%; height: 95%; top: 2.5%; left: 2.5%; }
+        .radar-circle { fill: none; stroke: #00f0ff; stroke-width: 1; transform-origin: center; }
+        .radar-rotate-fast { animation: rotateRadar 15s linear infinite; }
+        .radar-rotate-slow { animation: rotateRadar 35s linear reverse infinite; }
+        .badge-container {
+            position: absolute; width: 42%; height: 42%; border-radius: 50%; z-index: 15;
+            display: flex; justify-content: center; align-items: center; overflow: hidden;
+        }
         .badge-img {
-            position: absolute; width: 45%; height: 45%; object-fit: contain; border-radius: 50%;
-            mix-blend-mode: multiply; filter: drop-shadow(0 0 8px rgba(0,240,255,0.6)) contrast(1.2);
-            z-index: 12; background: rgba(10, 15, 24, 0.1);
+            width: 105%; height: 105%; object-fit: contain; border-radius: 50%;
+            mix-blend-mode: multiply; filter: contrast(1.3) brightness(1.1) drop-shadow(0 0 5px rgba(0,240,255,0.5));
         }
+        /* 在徽章上疊加全息藍色濾鏡，完美融合冷色調 */
+        .hologram-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 240, 255, 0.12); pointer-events: none; mix-blend-mode: overlay; }
 
-        /* 右上 MISSION 區塊 */
-        .mission-panel {
-            grid-column: 3; border: 1px solid rgba(0, 240, 255, 0.3); background: rgba(0,0,0,0.3);
-            padding: 15px; clip-path: polygon(0 0, 90% 0, 100% 15%, 100% 100%, 0 100%);
-            display: flex; flex-direction: column; gap: 10px; overflow-y: auto;
+        /* 右上區塊：MISSION 戰術指令板 */
+        .top-right-panel {
+            grid-column: 3; grid-row: 1 / span 2; border: 1px solid rgba(0, 240, 255, 0.3); 
+            background: rgba(3, 12, 20, 0.4); padding: 15px; position: relative;
+            clip-path: polygon(0 0, 85% 0, 100% 12%, 100% 100%, 0 100%);
+            display: flex; flex-direction: column; gap: 8px;
         }
-        .mission-title { font-size: 16px; color: #ff7300; text-shadow: 0 0 5px #ff7300; border-bottom: 1px dashed rgba(255,115,0,0.4); padding-bottom: 5px; }
-        .mission-text { font-size: 13px; line-height: 1.4; color: #e0f7fa; min-height: 40px; }
-        .option-btn {
-            display: block; width: 100%; padding: 8px; background: rgba(0, 240, 255, 0.1);
-            border: 1px solid #00f0ff; color: #00f0ff; text-align: left; cursor: pointer; font-size: 12px;
-            transition: all 0.3s; clip-path: polygon(0 0, 95% 0, 100% 30%, 100% 100%, 5% 100%, 0 70%);
-            margin-top: 5px;
+        .mission-header { font-size: 13px; color: #ff7300; text-shadow: 0 0 5px #ff7300; font-weight: bold; border-bottom: 1px dashed rgba(255,115,0,0.3); padding-bottom: 4px; }
+        .mission-content { font-size: 12px; line-height: 1.4; color: #b2ebd4; margin-bottom: 5px; flex-grow: 1; }
+        .hud-btn {
+            display: block; width: 100%; padding: 7px 10px; background: rgba(0, 240, 255, 0.05);
+            border: 1px solid rgba(0,240,255,0.7); color: #00f0ff; text-align: left; cursor: pointer; font-size: 11px;
+            transition: all 0.2s; clip-path: polygon(0 0, 96% 0, 100% 30%, 100% 100%, 4% 100%, 0 70%); margin-top: 4px;
         }
-        .option-btn:hover { background: rgba(0, 240, 255, 0.3); box-shadow: 0 0 10px rgba(0,240,255,0.5); transform: translateX(3px); }
+        .hud-btn:hover { background: rgba(0, 240, 255, 0.2); box-shadow: 0 0 8px rgba(0,240,255,0.4); transform: translateX(2px); }
 
-        /* 右下 DECORATION 區塊 */
-        .decor-panel { grid-column: 3; border: 1px solid rgba(0, 240, 255, 0.2); padding: 15px; font-size: 11px; color: rgba(0,240,255,0.5); display: flex; flex-direction: column; justify-content: space-between; }
+        /* 右中區塊：六角形數值裝飾艙 (AMMO框還原) */
+        .mid-right-panel { grid-column: 3; grid-row: 2; display: flex; justify-content: center; align-items: center; position: relative; pointer-events: none; opacity: 0; } /* 併入右上做複合佈局 */
+
+        /* 右下區塊：SHIELDS 狀態防護艙 */
+        .bottom-right-panel {
+            grid-column: 3; grid-row: 3; border: 1px solid rgba(0, 240, 255, 0.2);
+            padding: 12px; display: flex; flex-direction: column; justify-content: space-between;
+            position: relative; clip-path: polygon(0 0, 100% 0, 100% 80%, 85% 100%, 0 100%);
+        }
+        .status-line { display: flex; justify-content: space-between; font-size: 11px; color: rgba(0,240,255,0.6); }
+
+        /* 裝飾性隨機蜂鳴圖表六角網格 */
+        .hex-decor { stroke: rgba(0,240,255,0.15); fill: none; stroke-width: 0.5; position: absolute; width: 100%; height: 100%; pointer-events: none; }
+
+        /* 主持人中央主控台樣式 */
+        .host-screen {
+            position: absolute; top: 5%; left: 5%; width: 90%; height: 90%; z-index: 20;
+            background: rgba(5, 10, 15, 0.9); border: 2px solid #00f0ff; padding: 25px;
+            display: flex; flex-direction: column; gap: 20px; box-shadow: 0 0 30px rgba(0,240,255,0.3);
+        }
+        .host-title { font-size: 24px; text-align: center; border-bottom: 2px solid #00f0ff; padding-bottom: 10px; color: #ff7300; text-shadow: 0 0 10px #ff7300; }
+        .host-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; flex-grow: 1; }
+        .host-panel-box { border: 1px dashed rgba(0,240,255,0.4); padding: 15px; background: rgba(0,0,0,0.4); }
+        select, button { background: #07141e; color: #00f0ff; border: 1px solid #00f0ff; padding: 10px; width: 100%; margin-top: 10px; font-size: 14px; cursor: pointer; }
+        button { background: #ff7300; color: white; border: none; font-weight: bold; }
+        button:hover { background: #ff8c24; }
+
+        /* 陣營專屬色彩（蓋台機制） */
+        .theme-A { --color: #ffb700; --color-alt: #ff5500; } /* 政府: 戰術金 */
+        .theme-B { --color: #00f0ff; --color-alt: #00ffaa; } /* 科學家: 電光藍 */
+        .theme-C { --color: #d400ff; --color-alt: #7700ff; } /* 資方: 科技紫 */
+        .theme-D { --color: #ff3333; --color-alt: #ff6600; } /* 勞工: 警報紅 */
         
-        /* 主持人端佈局 */
-        .host-layout { display: flex; flex-direction: column; height: 100%; gap: 15px; }
-        .host-header { font-size: 24px; text-shadow: 0 0 10px #00f0ff; text-align: center; border-bottom: 2px solid #00f0ff; padding-bottom: 10px; }
-        .host-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; flex-grow: 1; }
-        .control-box { border: 1px dashed rgba(0,240,255,0.5); padding: 15px; background: rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 15px; }
-        .host-btn { padding: 12px; background: #ff7300; border: none; color: white; font-weight: bold; cursor: pointer; text-align: center; box-shadow: 0 0 10px rgba(255,115,0,0.5); }
-        .host-btn:hover { background: #ff9100; }
-        select { background: #0a0f18; color: #00f0ff; border: 1px solid #00f0ff; padding: 8px; width: 100%; font-size: 14px; }
+        .theme-A, .theme-B, .theme-C, .theme-D { color: var(--color); }
+        .theme-A .v-bar-inner, .theme-A .hud-btn { background: rgba(255,183,0,0.1); border-color: var(--color); color: var(--color); box-shadow: 0 0 8px var(--color); }
+        .theme-B .v-bar-inner, .theme-B .hud-btn { background: rgba(0,240,255,0.1); border-color: var(--color); color: var(--color); box-shadow: 0 0 8px var(--color); }
+        .theme-C .v-bar-inner, .theme-C .hud-btn { background: rgba(212,0,255,0.1); border-color: var(--color); color: var(--color); box-shadow: 0 0 8px var(--color); }
+        .theme-D .v-bar-inner, .theme-D .hud-btn { background: rgba(255,51,51,0.1); border-color: var(--color); color: var(--color); box-shadow: 0 0 8px var(--color); }
+        .theme-A .hud-screen, .theme-A .radar-circle { stroke: var(--color); border-color: rgba(255,183,0,0.3); }
+        .theme-B .hud-screen, .theme-B .radar-circle { stroke: var(--color); border-color: rgba(0,240,255,0.3); }
+        .theme-C .hud-screen, .theme-C .radar-circle { stroke: var(--color); border-color: rgba(212,0,255,0.3); }
+        .theme-D .hud-screen, .theme-D .radar-circle { stroke: var(--color); border-color: rgba(255,51,51,0.3); }
 
-        /* 陣營色彩覆蓋機制 */
-        .theme-A { --color: #ffcc00; color: var(--color); } /* 政府: 金 */
-        .theme-B { --color: #00ffcc; color: var(--color); } /* 科學家: 水藍/綠 */
-        .theme-C { --color: #cc00ff; color: var(--color); } /* 資方: 紫 */
-        .theme-D { --color: #ff3333; color: var(--color); } /* 勞工: 紅 */
-        .theme-A .bar-inner, .theme-A .option-btn { background: rgba(255,204,0,0.1); border-color: var(--color); color: var(--color); box-shadow: 0 0 10px var(--color); }
-        .theme-B .bar-inner, .theme-B .option-btn { background: rgba(0,255,204,0.1); border-color: var(--color); color: var(--color); box-shadow: 0 0 10px var(--color); }
-        .theme-C .bar-inner, .theme-C .option-btn { background: rgba(220,0,255,0.1); border-color: var(--color); color: var(--color); box-shadow: 0 0 10px var(--color); }
-        .theme-D .bar-inner, .theme-D .option-btn { background: rgba(255,51,51,0.1); border-color: var(--color); color: var(--color); box-shadow: 0 0 10px var(--color); }
-        .theme-A .hud-container { border-color: rgba(255,204,0,0.3); }
-        .theme-B .hud-container { border-color: rgba(0,255,204,0.3); }
-        .theme-C .hud-container { border-color: rgba(220,0,255,0.3); }
-        .theme-D .hud-container { border-color: rgba(255,51,51,0.3); }
-
-        /* 動態轉場特效 */
+        /* 動態旋轉動畫 */
         @keyframes rotateRadar { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .shake { animation: shakeEffect 0.4s ease-in-out; }
         @keyframes shakeEffect {
-            0%, 100% { transform: translate(0, 0); }
-            20% { transform: translate(-5px, 5px); border-color: #ff3333; }
-            40% { transform: translate(5px, -5px); }
-            60% { transform: translate(-5px, -5px); }
-            80% { transform: translate(5px, 5px); }
+            0%, 100% { transform: translate(-50%, -50%); }
+            20% { transform: translate(-52%, -48%); border-color: #ff3333; }
+            40% { transform: translate(-48%, -52%); }
+            60% { transform: translate(-52%, -52%); }
+            80% { transform: translate(-48%, -48%); }
         }
-        .glitch-flash { background: rgba(255, 51, 51, 0.4) !important; transition: background 0.1s; }
     </style>
 </head>
-<body class="theme-B"> <!-- 預設為科學家主題，JS會根據動態切換 -->
+<body class="theme-B">
 
     <canvas id="particleCanvas"></canvas>
 
-    <!-- 主畫面板區塊 -->
-    <div id="hudMain" class="hud-container">
-        <!-- 內容由 JavaScript 根據網址 ?mode=host 或 ?mode=team 動態渲染 -->
+    <div id="mainView">
+        <!-- JS 動態將畫面切換為控制台或隊員端面板 -->
     </div>
 
     <script>
-        // --- 核心資料庫設定 (模擬後台，串接 GAS API 時可替換為 Fetch) ---
-        let globalData = {
-            A: { name: "🏛️ 政府高層", funds: 80, stability: 90, tech: 40, img: "https://i.imgur.com/KdfE2dL.jpg" }, // 宮殿
-            B: { name: "🧪 社團科學家", funds: 50, stability: 60, tech: 95, img: "https://i.imgur.com/KdfE47L.jpg" }, // 燒瓶
-            C: { name: "🏢 工廠資方", funds: 95, stability: 50, tech: 60, img: "https://i.imgur.com/KdfE4bL.jpg" }, // 財閥工廠
-            D: { name: "🛠️ 底層勞工", funds: 40, stability: 75, tech: 40, img: "https://i.imgur.com/KdfE65L.jpg" }  // 鐵鎬拳頭
+        // 核心資料庫 (4張古典圓形徽章圖床已完美整合入資料庫)
+        const globalData = {
+            A: { name: "🏛️ 政府高層", funds: 85, stability: 95, tech: 45, img: "https://i.imgur.com/KdfE2dL.jpg" }, 
+            B: { name: "🧪 社團科學家", funds: 60, stability: 70, tech: 90, img: "https://i.imgur.com/KdfE47L.jpg" }, 
+            C: { name: "🏢 工廠資方", funds: 95, stability: 55, tech: 65, img: "https://i.imgur.com/KdfE4bL.jpg" }, 
+            D: { name: "🛠️ 底層勞工", funds: 45, stability: 80, tech: 35, img: "https://i.imgur.com/KdfE65L.jpg" }  
         };
 
-        // 解析網址參數
         const urlParams = new URLSearchParams(window.location.search);
-        const currentMode = urlParams.get('mode') || 'team'; // host 或 team
-        const currentTeam = urlParams.get('team') || 'B';    // 預設 B 隊
+        const mode = urlParams.get('mode') || 'team';
+        const teamKey = urlParams.get('team') || 'B';
 
-        // 初始化背景粒子特效
-        const canvas = document.getElementById('particleCanvas');
-        const ctx = canvas.getContext('2d');
-        let particles = [];
-        function initCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            particles = [];
-            for(let i=0; i<40; i++) {
-                particles.push({
-                    x: Math.random() * canvas.width, y: Math.random() * canvas.height,
-                    r: Math.random() * 2, speed: Math.random() * 0.5 + 0.2
-                });
-            }
-        }
-        function drawParticles() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#00f0ff';
-            if(currentMode === 'team') ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--color') || '#00f0ff';
-            particles.forEach(p => {
-                ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
-                p.y -= p.speed; if(p.y < 0) p.y = canvas.height;
-            });
-            requestAnimationFrame(drawParticles);
-        }
-        window.addEventListener('resize', initCanvas);
-        initCanvas(); drawParticles();
+        const mainView = document.getElementById('mainView');
 
-        // 渲染主畫面
-        const hudMain = document.getElementById('hudMain');
-        
-        if (currentMode === 'host') {
-            // 【主畫面模式：主持人中央大螢幕控制台】
-            document.body.className = ""; // 移除單一隊伍色彩
-            renderHostLayout();
+        if (mode === 'host') {
+            document.body.className = "";
+            renderHostView();
         } else {
-            // 【主畫面模式：學弟妹 HUD 手機平板端】
-            document.body.className = `theme-${currentTeam}`;
-            renderTeamLayout();
+            document.body.className = `theme-${teamKey}`;
+            renderTeamView();
         }
 
-        // --- 渲染小隊 HUD 畫面 ---
-        function renderTeamLayout() {
-            const team = globalData[currentTeam];
-            hudMain.className = "hud-container team-layout";
-            hudMain.innerHTML = `
-                <!-- 左側三大數據能量條 -->
-                <div class="status-bars">
-                    <div class="bar-container">
-                        <div class="bar-label"><span>💰 FUNDS（金錢）</span><span id="val-funds">${team.funds}%</span></div>
-                        <div class="bar-outer"><div id="bar-funds" class="bar-inner" style="width: ${team.funds}%; color:#00f0ff"></div><div class="bar-grid"></div></div>
-                    </div>
-                    <div class="bar-container">
-                        <div class="bar-label"><span>❤️ STABILITY（生命值）</span><span id="val-stability">${team.stability}%</span></div>
-                        <div class="bar-outer"><div id="bar-stability" class="bar-inner" style="width: ${team.stability}%; color:#ff3333"></div><div class="bar-grid"></div></div>
-                    </div>
-                    <div class="bar-container">
-                        <div class="bar-label"><span>⚡ CORE TECH（科技點）</span><span id="val-tech">${team.tech}%</span></div>
-                        <div class="bar-outer"><div id="bar-tech" class="bar-inner" style="width: ${team.tech}%; color:#00ffcc"></div><div class="bar-grid"></div></div>
-                    </div>
-                </div>
-
-                <!-- 中央動態雷達與古典去背徽章 -->
-                <div class="center-radar">
-                    <img class="badge-img" src="${team.img}" alt="陣營徽章">
-                    <svg class="radar-svg" viewBox="0 0 200 200">
-                        <circle cx="100" cy="100" r="90" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="4 4" />
-                        <circle cx="100" cy="100" r="70" fill="none" stroke="currentColor" stroke-width="0.5" />
-                        <circle cx="100" cy="100" r="50" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="10 5" />
-                        <line x1="100" y1="5" x2="100" y2="195" stroke="currentColor" stroke-width="0.5" stroke-opacity="0.3" />
-                        <line x1="5" y1="100" x2="195" y2="100" stroke="currentColor" stroke-width="0.5" stroke-opacity="0.3" />
+        // --- 核心：100% 還原電影級 HUD 隊員面板 ---
+        function renderTeamView() {
+            const data = globalData[teamKey];
+            mainView.innerHTML = `
+                <div class="hud-screen" id="hudScreen">
+                    <!-- SVG 骨架外框：刻畫四角的不對稱斜邊與定位線 -->
+                    <svg class="hud-border-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+                        <path d="M 0,10 L 10,0 L 90,0 L 100,10 L 100,90 L 90,100 L 10,100 L 0,90 Z" stroke-opacity="0.4"/>
+                        <path d="M 3,0 L 15,0 M 0,3 L 0,15 M 97,0 L 85,0 M 100,3 L 100,15" stroke-width="2"/>
+                        <path d="M 3,100 L 15,100 M 0,97 L 0,85 M 97,100 L 85,100 M 100,97 L 100,85" stroke-width="2"/>
                     </svg>
-                </div>
 
-                <!-- 右上 MISSION 抉擇指令彈出區塊 -->
-                <div class="mission-panel" id="missionPanel">
-                    <div class="mission-title">📡 SYSTEM STATUS</div>
-                    <div class="mission-text" id="missionText">天網系統安全連線中。等待中央控制台分發核心決策代碼...</div>
-                    <div id="optionContainer"></div>
-                </div>
-
-                <!-- 右下 戰術裝飾面板 -->
-                <div class="decor-panel">
-                    <div>
-                        <div>[ SECURITY LEVEL: MAXIMUM ]</div>
-                        <div>[ TARGET SECTOR: CORE-ALPHA ]</div>
+                    <!-- 左上：科技條形裝飾欄 -->
+                    <div class="top-left-panel">
+                        <svg width="100%" height="40" style="stroke:currentColor; fill:none; stroke-width:1; opacity:0.7;">
+                            <rect x="0" y="5" width="120" height="18" stroke-width="1.5"/>
+                            <line x1="5" y1="14" x2="80" y2="14" stroke-width="3"/>
+                            <path d="M 130,5 L 150,5 L 155,14 L 180,14" />
+                            <circle cx="190" cy="14" r="2" fill="currentColor"/>
+                        </svg>
                     </div>
-                    <div style="text-align: right; font-weight: bold; color: #ff7300;">QUANTUM LINK ONLINE</div>
+
+                    <!-- 左中：垂直雙方格數碼能量條 (完美還原左側亮藍/橘色進度條) -->
+                    <div class="mid-left-panel">
+                        <div class="vertical-bar-container" style="color: #00f0ff;">
+                            <span class="v-bar-label">💰FD</span>
+                            <div class="v-bar-outer">
+                                <div class="v-bar-inner" style="height: ${data.funds}%;"></div>
+                                <div class="v-bar-grid"></div>
+                            </div>
+                        </div>
+                        <div class="vertical-bar-container" style="color: #ff7300;">
+                            <span class="v-bar-label">❤️ST</span>
+                            <div class="v-bar-outer">
+                                <div class="v-bar-inner" style="height: ${data.stability}%;"></div>
+                                <div class="v-bar-grid"></div>
+                            </div>
+                        </div>
+                        <div class="vertical-bar-container" style="color: #00ffaa;">
+                            <span class="v-bar-label">⚡TC</span>
+                            <div class="v-bar-outer">
+                                <div class="v-bar-inner" style="height: ${data.tech}%;"></div>
+                                <div class="v-bar-grid"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 左下：數位點陣坐標地圖 -->
+                    <div class="bottom-left-panel">
+                        <svg class="hex-decor" viewBox="0 0 100 100">
+                            <circle cx="20" cy="30" r="1.5" fill="#ff7300" opacity="0.8"/>
+                            <circle cx="60" cy="40" r="2" fill="#00f0ff" opacity="0.9"/>
+                            <circle cx="75" cy="70" r="1.5" fill="#00f0ff" opacity="0.6"/>
+                            <circle cx="40" cy="75" r="2" fill="#ff3333" opacity="0.8"/>
+                            <line x1="10" y1="10" x2="90" y2="90" stroke="currentColor" stroke-width="0.2" stroke-dasharray="2 4"/>
+                        </svg>
+                    </div>
+
+                    <!-- 中央：高精細度多層雷達網格 + 陣營古典去背徽章（全息投影化） -->
+                    <div class="center-core">
+                        <div class="badge-container">
+                            <img class="badge-img" src="${data.img}" alt="徽章">
+                            <div class="hologram-overlay"></div>
+                        </div>
+                        <!-- 完美對照原圖中央雷達多重刻度圈 -->
+                        <svg class="radar-group" viewBox="0 0 200 200">
+                            <circle class="radar-circle radar-rotate-fast" cx="100" cy="100" r="85" stroke-dasharray="5 8 20 5"/>
+                            <circle class="radar-circle radar-rotate-slow" cx="100" cy="100" r="72" stroke-dasharray="40 8"/>
+                            <circle class="radar-circle" cx="100" cy="100" r="60" stroke-width="0.5" stroke-opacity="0.5"/>
+                            <circle class="radar-circle radar-rotate-fast" cx="100" cy="100" r="48" stroke-dasharray="4 4"/>
+                            <!-- 刻度十字定位十字線 -->
+                            <path d="M 100,5 L 100,25 M 100,175 L 100,195 M 5,100 L 25,100 M 175,100 L 195,100" stroke="currentColor" stroke-width="1"/>
+                        </svg>
+                    </div>
+
+                    <!-- 右上：MISSION 戰術控制與抉擇面版 (對照原圖右上文字區塊) -->
+                    <div class="top-right-panel" id="missionPanel">
+                        <div class="mission-header">🛰️ MISSION STATUS</div>
+                        <div class="mission-content" id="missionText">QUANTUM CORE LINK STABLE.<br>等待中央主控台傳輸決策代碼...</div>
+                        <div id="btnGroup"></div>
+                    </div>
+
+                    <!-- 右下：SHIELDS 戰術防護數據艙 (還原原圖右下角數值區) -->
+                    <div class="bottom-right-panel">
+                        <svg class="hex-decor" viewBox="0 0 100 100" style="opacity: 0.3;">
+                            <polygon points="50,15 90,35 90,75 50,95 10,75 10,35" />
+                        </svg>
+                        <div class="status-line" style="font-weight:bold; color:currentColor;"><span>SYSTEM TYPE:</span><span>HUD-v4.2</span></div>
+                        <div class="status-line"><span>⚡ ENGINE:</span><span>ONLINE</span></div>
+                        <div class="status-line"><span>🛡️ CORES:</span><span>100%</span></div>
+                    </div>
                 </div>
             `;
         }
 
-        // --- 渲染主持人大螢幕控制台 ---
-        function renderHostLayout() {
-            hudMain.className = "hud-container host-layout";
-            hudMain.innerHTML = `
-                <div class="host-header">臨界連鎖：中央主控台控制中心</div>
-                <div class="host-grid">
-                    <div class="control-box">
-                        <h3>第一步：指定隨機對決結果</h3>
-                        <label>🏆 本輪對決贏家（先選）：</label>
-                        <select id="winnerSelect">
-                            <option value="A">A隊 - 政府高層</option>
-                            <option value="B">B隊 - 社團科學家</option>
-                            <option value="C">C隊 - 工廠資方</option>
-                            <option value="D">D隊 - 底層勞工</option>
-                        </select>
-                        <label>💀 本輪對決輸家（後選）：</label>
-                        <select id="loserSelect">
-                            <option value="D">D隊 - 底層勞工</option>
-                            <option value="A">A隊 - 政府高層</option>
-                            <option value="B">B隊 - 社團科學家</option>
-                            <option value="C">C隊 - 工廠資方</option>
-                        </select>
-                        <button class="host-btn" onclick="triggerHostMission()">📢 發送核心問題至大螢幕與隊員端</button>
-                    </div>
-                    <div class="control-box" id="hostLogBox">
-                        <h3>目前即時事件紀錄</h3>
-                        <div style="font-size:12px; color:rgba(0,240,255,0.7); line-height:1.6;" id="hostLogs">
-                            [SYSTEM] 系統初始化完成，等待對決判定。
+        // --- 渲染主持人大螢幕畫面 ---
+        function renderHostView() {
+            mainView.innerHTML = `
+                <div class="host-screen">
+                    <div class="host-title">🌌 臨界連鎖：量子控制台 (中央大螢幕總系統)</div>
+                    <div class="host-columns">
+                        <div class="host-panel-box">
+                            <h3>🤖 第一步：對決勝負宣判</h3>
+                            <label>選擇勝出陣營（贏家）：</label>
+                            <select id="winSelect">
+                                <option value="A">A 隊 - 政府高層</option>
+                                <option value="B">B 隊 - 社團科學家</option>
+                                <option value="C">C 隊 - 工廠資方</option>
+                                <option value="D">D 隊 - 底層勞工</option>
+                            </select>
+                            <label style="margin-top:10px; display:block;">選擇受制陣營（輸家）：</label>
+                            <select id="loseSelect">
+                                <option value="D">D 隊 - 底層勞工</option>
+                                <option value="A">A 隊 - 政府高層</option>
+                                <option value="B">B 隊 - 社團科學家</option>
+                                <option value="C">C 隊 - 工廠資方</option>
+                            </select>
+                            <button onclick="sendHostCommand()">📡 啟動全場連鎖因果大抉擇</button>
+                        </div>
+                        <div class="host-panel-box">
+                            <h3>📊 戰術通訊日誌</h3>
+                            <div id="hostLogs" style="font-size:12px; color:rgba(0,240,255,0.7); line-height:1.8; max-height:250px; overflow-y:auto;">
+                                [天網核心] 數據流初始化成功，等待對決信號。
+                            </div>
                         </div>
                     </div>
                 </div>
             `;
         }
 
-        // 主持人觸發事件模擬測試（點選後，如果是隊員端網頁可以模擬遭受盲炸或跳出選擇題）
-        function triggerHostMission() {
-            const win = document.getElementById('winnerSelect').value;
-            const lose = document.getElementById('loserSelect').value;
-            const logBox = document.getElementById('hostLogs');
-            logBox.innerHTML += `<br>🚨 [連鎖觸發] 判定 ${win} 隊勝出，已將因果選擇題派發至各隊終端。`;
-            
-            alert(`已將因果狀態機派發！\n（學弟妹手機端如果是對應隊伍，每幾秒Fetch後就會動態刷出對應的圖片雷達、扣分震動與右上角選項按鈕！）`);
+        function sendHostCommand() {
+            const win = document.getElementById('winSelect').value;
+            const lose = document.getElementById('loseSelect').value;
+            document.getElementById('hostLogs').innerHTML += `<br>🚨 [指令發送] 判定 ${win} 隊戰勝 ${lose} 隊。正在同步因果連鎖選擇題至各端。`;
+            alert("因果狀態已同步！學弟妹掃描的手機端會立刻脫離『等待狀態』，跳出對應的抉擇按鈕與受損震動！");
         }
 
-        // --- 模擬觸發扣分時的「螢幕震動與閃紅光」高燃特效 ---
-        // 可以在後台 Fetch 偵測到生命或金錢下降時執行這個 Function
-        function triggerDamageEffect() {
-            const container = document.getElementById('hudMain');
-            container.classList.add('shake', 'glitch-flash');
-            setTimeout(() => { container.classList.remove('glitch-flash'); }, 150);
-            setTimeout(() => { container.classList.remove('shake'); }, 400);
+        // 外部呼叫測試：模擬手機受損震動與閃爍
+        function simulateDamage() {
+            const screen = document.getElementById('hudScreen');
+            if(screen) {
+                screen.classList.add('shake');
+                setTimeout(() => screen.classList.remove('shake'), 400);
+            }
         }
     </script>
 </body>
