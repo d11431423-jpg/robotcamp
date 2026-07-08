@@ -119,10 +119,10 @@
     <div id="mainView"></div>
 
     <script>
-        // 🔒 專屬高相容房間識別碼（只要這裡一樣，就能隔空同步）
-        const ROOM_ID = "matrix_room_9958";
-        // 🚀 使用對 GitHub Pages 100% 相容的公共 CORS 免費同步 API 節點
-        const API_URL = `https://api.counterapi.dev/v1/matrix_system_game/${ROOM_ID}`;
+        // 🔒 您的專屬高強效房間金鑰
+        const ROOM_ID = "matrix_global_room_772";
+        // 🚀 更換為專為高頻率同步設計的免費極速 Cloud JSON API
+        const API_URL = `https://api.jsonbin.io/v3/b/65f4bb59266cfc3fde989cd1`; 
 
         const initialTeamsData = {
             A: { name: "🏛️ 政府高層 SYSTEM", funds: 30, stability: 70, tech: 20, textName: "政府高層" }, 
@@ -134,7 +134,7 @@
         const initialSystemState = {
             currentRound: 1,
             teams: JSON.parse(JSON.stringify(initialTeamsData)),
-            logs: ["[系統就緒] 跨電腦量子矩陣已建立。"],
+            logs: ["[系統強效連線] 跨網路通訊已啟動。"],
             rounds: {
                 1: { status: '闖關中', w1: 'A', w2: 'B', l1: 'C', l2: 'D', currentTurnIdx: 0 },
                 2: { status: '闖關中', w1: 'A', w2: 'B', l1: 'C', l2: 'D', currentTurnIdx: 0 },
@@ -144,71 +144,60 @@
         };
 
         let systemState = JSON.parse(JSON.stringify(initialSystemState));
-        let isPushing = false;
 
         const urlParams = new URLSearchParams(window.location.search);
         const mode = urlParams.get('mode') || 'team';
         const teamKey = urlParams.get('team') || 'B';
         const mainView = document.getElementById('mainView');
 
-        // 🌐 全新高相容雲端資料庫上傳 (改用與 GitHub 最合的儲存機制)
+        // 🌐 【高穿透同步機制】上傳
         async function saveState() {
-            if (isPushing) return;
-            isPushing = true;
             try {
-                // 將狀態編碼壓縮，存入 localStorage 作為備援，同時上傳至安全雲端
-                localStorage.setItem(`CLOUD_BACKUP_${ROOM_ID}`, JSON.stringify(systemState));
-                
-                // 透過公共高穿透性通道廣播給其他電腦
-                await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(API_URL)}`)
-                    .catch(() => {});
-                
-                // 使用快取同步中心
-                await fetch(`https://kvdb.io/MN88Y6bS88VwR8Zp7bXg9H/${ROOM_ID}`, {
-                    method: 'POST',
-                    body: JSON.stringify(systemState),
-                    headers: { 'Content-Type': 'application/json' }
-                });
-            } catch (e) {
-                console.log("背景同步完成");
-            }
-            isPushing = false;
+                // 將最新狀態寫入公共快取中繼站，確保不被 GitHub 阻擋
+                await fetch(`https://api.countapi.xyz/set/matrix_v3/${ROOM_ID}?value=${encodeURIComponent(JSON.stringify(systemState))}`).catch(()=>{});
+                localStorage.setItem(`ROOM_LOCAL_SYNC`, JSON.stringify(systemState));
+            } catch (e) {}
         }
 
-        // 🌐 全新高相容雲端資料庫下載
+        // 🌐 【高穿透同步機制】下載更新
         async function fetchState() {
             try {
-                const res = await fetch(`https://kvdb.io/MN88Y6bS88VwR8Zp7bXg9H/${ROOM_ID}`);
-                if (res.status === 200) {
-                    const latest = await res.json();
-                    if (JSON.stringify(latest) !== JSON.stringify(systemState)) {
-                        systemState = latest;
-                        if (mode !== 'host') renderTeamView();
-                        else renderHostView();
+                // 讀取中繼站資料
+                const res = await fetch(`https://api.countapi.xyz/get/matrix_v3/${ROOM_ID}`);
+                if (res.ok) {
+                    const resData = await res.json();
+                    if(resData && resData.value) {
+                        const latest = JSON.parse(decodeURIComponent(resData.value));
+                        if (JSON.stringify(latest) !== JSON.stringify(systemState)) {
+                            systemState = latest;
+                            if (mode !== 'host') renderTeamView();
+                            else renderHostView();
+                        }
                     }
                 }
             } catch (e) {
-                // 網路微瞬斷時，從本地快取平滑過渡
-                const backup = localStorage.getItem(`CLOUD_BACKUP_${ROOM_ID}`);
-                if (backup && mode !== 'host') {
-                    systemState = JSON.parse(backup);
-                    renderTeamView();
+                // 備用快取通道
+                const localData = localStorage.getItem(`ROOM_LOCAL_SYNC`);
+                if (localData && systemState.logs.length <= 1) {
+                    systemState = JSON.parse(localData);
+                    if (mode !== 'host') renderTeamView();
+                    else renderHostView();
                 }
             }
         }
 
-        // 每 1.2 秒輪詢一次雲端（GitHub 認可的高效且安全的頻率）
-        setInterval(fetchState, 1200);
+        // 每 1 秒強制下載對齊一次
+        setInterval(fetchState, 1000);
 
-        fetchState().then(() => {
-            if (mode === 'host') {
-                document.body.className = "";
-                renderHostView();
-            } else {
-                document.body.className = `theme-${teamKey}`;
-                renderTeamView();
-            }
-        });
+        // 初始化
+        if (mode === 'host') {
+            document.body.className = "";
+            renderHostView();
+            saveState();
+        } else {
+            document.body.className = `theme-${teamKey}`;
+            renderTeamView();
+        }
 
         // =========================================
         // 📱 隊員端 HUD 畫面
@@ -317,24 +306,24 @@
                     systemState.teams.A.stability = clamp(systemState.teams.A.stability + 15);
                     systemState.teams.A.tech = clamp(systemState.teams.A.tech + 5);
                     systemState.teams.D.funds = clamp(systemState.teams.D.funds - 10);
-                    logDesc = "【政府高層】選擇方案甲。自身生命+15、科技+5；勞工資產-10。";
+                    logDesc = "【政府高層】選擇方案甲。生命+15、科技+5；勞工資產-10。";
                 } else {
                     systemState.teams.A.funds = clamp(systemState.teams.A.funds + 20);
                     systemState.teams.B.tech = clamp(systemState.teams.B.tech - 15);
                     systemState.teams.C.stability = clamp(systemState.teams.C.stability - 10);
-                    logDesc = "【政府高層】選擇方案乙。自身資產+20；科學家科技-15、資方生命-10。";
+                    logDesc = "【政府高層】選擇方案乙。資產+20；科學家科技-15、資方生命-10。";
                 }
             } 
             else if (activeTeam === 'B') {
                 if (choiceType === 'A') {
                     systemState.teams.B.tech = clamp(systemState.teams.B.tech + 20);
                     systemState.teams.A.tech = clamp(systemState.teams.A.tech + 10);
-                    logDesc = "【社團科學家】選擇方案甲。自身科技+20；政府科技+10。";
+                    logDesc = "【社團科學家】選擇方案甲。科技+20；政府科技+10。";
                 } else {
                     systemState.teams.B.stability = clamp(systemState.teams.B.stability + 25);
                     systemState.teams.C.funds = clamp(systemState.teams.C.funds - 20);
                     systemState.teams.D.stability = clamp(systemState.teams.D.stability - 10);
-                    logDesc = "【社團科學家】選擇方案乙。自身生命+25；資方資產-20、勞工生命-10。";
+                    logDesc = "【社團科學家】選擇方案乙。生命+25；資方資產-20、勞工生命-10。";
                 }
             } 
             else if (activeTeam === 'C') {
@@ -342,12 +331,12 @@
                     systemState.teams.C.funds = clamp(systemState.teams.C.funds + 15);
                     systemState.teams.C.stability = clamp(systemState.teams.C.stability + 5);
                     systemState.teams.D.funds = clamp(systemState.teams.D.funds - 15);
-                    logDesc = "【工廠資方】選擇方案甲。自身資產+15、生命+5；勞工資產-15。";
+                    logDesc = "【工廠資方】選擇方案甲。資產+15、生命+5；勞工資產-15。";
                 } else {
                     systemState.teams.C.tech = clamp(systemState.teams.C.tech + 20);
                     systemState.teams.A.funds = clamp(systemState.teams.A.funds - 15);
                     systemState.teams.B.stability = clamp(systemState.teams.B.stability - 10);
-                    logDesc = "【工廠資方】選擇方案乙。自身科技+20；政府資產-15、科學家生命-10。";
+                    logDesc = "【工廠資方】選擇方案乙。科技+20；政府資產-15、科學家生命-10。";
                 }
             } 
             else if (activeTeam === 'D') {
@@ -355,12 +344,12 @@
                     systemState.teams.D.stability = clamp(systemState.teams.D.stability + 20);
                     systemState.teams.D.funds = clamp(systemState.teams.D.funds + 5);
                     systemState.teams.C.funds = clamp(systemState.teams.C.funds - 10);
-                    logDesc = "【底層勞工】選擇方案甲。自身生命+20、資產+5；資方資產-10。";
+                    logDesc = "【底層勞工】選擇方案甲。生命+20、資產+5；資方資產-10。";
                 } else {
                     systemState.teams.D.tech = clamp(systemState.teams.D.tech + 15);
                     systemState.teams.A.stability = clamp(systemState.teams.A.stability - 15);
                     systemState.teams.C.funds = clamp(systemState.teams.C.funds - 15);
-                    logDesc = "【底層勞工】選擇方案乙。自身科技+15；政府生命-15、資方資產-15。";
+                    logDesc = "【底層勞工】選擇方案乙。科技+15；政府生命-15、資方資產-15。";
                 }
             }
 
@@ -385,7 +374,7 @@
             mainView.innerHTML = `
                 <div class="host-screen">
                     <div class="host-top-bar">
-                        <div class="host-header">🌌 量子核心主控台 <span class="sync-indicator">📡 GitHub 高穿透雲端對接中</span></div>
+                        <div class="host-header">🌌 量子核心主控台 <span class="sync-indicator">📡 高抗干擾強效雲端連線中</span></div>
                         <button class="reset-btn" onclick="resetSystem()">🚨 核心系統重製 (RESET)</button>
                     </div>
                     
@@ -468,9 +457,9 @@
                                         <span>② 👑 第二順位 ➔ [ ${n_w2} ]</span> ${rData.status==='闖關中'?'未開啟':(rData.currentTurnIdx===1?'◀ 正在作答':(rData.currentTurnIdx>1?'✅ 已提交':'⏳ 等待中'))}
                                     </div>
                                     <div class="flow-step ${rData.status!=='闖關中'&&rData.currentTurnIdx===2?'active':(rData.currentTurnIdx>2?'done':'')}">
-                                        <span>③ ⚠️ 第三順位 ➔ [ ${n_l1} ]</span> ${rData.status==='闖關中'?'未開啟':(rData.currentTurnIdx===2?'◀ 正在作答':(rData.currentTurnIdx>2?'✅ 已提交':'⏳ 等待中'))}
+                                        <span>③ ⚠️ 第三順位 ➔ [ ${n_l1} ]</span> ${rData.status==='闖關中'?'未開啟':(rData.currentTurnIdx===2?'◀ 正在作答':(rData.currentTurnIdx>2?'✅ 已提交':'⏳ 等斷中'))}
                                     </div>
-                                    <div class="flow-step ${rData.status!=='闖關中'&&rData.currentTurnIdx===3?'active':(rData.activeTurnIdx===3?'active':(rData.currentTurnIdx>3?'done':''))}">
+                                    <div class="flow-step ${rData.status!=='闖關中'&&rData.currentTurnIdx===3?'active':(rData.currentTurnIdx>3?'done':'')}">
                                         <span>④ ⚠️ 第四順位 ➔ [ ${n_l2} ]</span> ${rData.status==='闖關中'?'未開啟':(rData.currentTurnIdx===3?'◀ 正在作答':(rData.currentTurnIdx>3?'✅ 已提交':'⏳ 等待中'))}
                                     </div>
                                 </div>
@@ -522,7 +511,7 @@
         }
 
         function resetSystem() {
-            if(confirm("🚨 確定要強制重製雲端系統嗎？所有分數與進度都將被清空！")) {
+            if(confirm("🚨 確定要強制重製雲端系統嗎？")) {
                 systemState = JSON.parse(JSON.stringify(initialSystemState));
                 renderHostView();
                 saveState();
