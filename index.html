@@ -1,649 +1,460 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TACTICAL MATRIX SYSTEM</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', Courier, monospace, "System-UI", sans-serif; }
-        body, html { width: 100%; min-height: 100%; background-color: #020608; color: #00f0ff; position: relative; }
-        
-        body::before {
-            content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
-            background-image: linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
-            background-size: 30px 30px; z-index: 1; pointer-events: none;
+<script>
+    const API_URL = "https://bacon.pico.sh/matrix_ultra_speed_991";
+
+    const initialTeamsData = {
+        A: { name: "🏛️ 政府高層 SYSTEM", funds: 30, stability: 70, tech: 20, textName: "政府高層" }, 
+        B: { name: "🧪 社團科學家 SYSTEM", funds: 20, stability: 30, tech: 70, textName: "社團科學家" }, 
+        C: { name: "🏢 工廠資方 SYSTEM", funds: 70, stability: 30, tech: 20, textName: "工廠資方" }, 
+        D: { name: "🛠️ 底層勞工 SYSTEM", funds: 40, stability: 40, tech: 40, textName: "底層勞工" }  
+    };
+
+    const initialSystemState = {
+        version: 0,
+        currentRound: 1,
+        teams: JSON.parse(JSON.stringify(initialTeamsData)),
+        logs: ["[量子高階同步] 零延遲光纖通道已連接。"],
+        rounds: {
+            1: { status: '闖關中', w1: 'A', w2: 'B', l1: 'C', l2: 'D', currentTurnIdx: 0 },
+            2: { status: '闖關中', w1: 'A', w2: 'B', l1: 'C', l2: 'D', currentTurnIdx: 0 },
+            3: { status: '闖關中', w1: 'A', w2: 'B', l1: 'C', l2: 'D', currentTurnIdx: 0 },
+            4: { status: '闖關中', w1: 'A', w2: 'B', l1: 'C', l2: 'D', currentTurnIdx: 0 }
         }
-        body::after {
-            content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
-            background: radial-gradient(circle, rgba(0,0,0,0) 50%, rgba(2,6,8,0.9) 100%); z-index: 2; pointer-events: none;
-        }
+    };
 
-        .main-container {
-            display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 15px; position: relative; z-index: 10;
-        }
+    let systemState = JSON.parse(JSON.stringify(initialSystemState));
 
-        /* HUD Screen Layout */
-        .hud-screen {
-            position: relative; width: 95vw; max-width: 850px; min-height: 650px;
-            background: rgba(4, 10, 15, 0.9); border: 2px solid rgba(0, 240, 255, 0.3);
-            box-shadow: 0 0 40px rgba(0, 240, 255, 0.1), inset 0 0 30px rgba(0, 240, 255, 0.05);
-            display: grid; grid-template-columns: 1.3fr 1.6fr 1.4fr; grid-template-rows: auto 1fr auto; padding: 25px; gap: 20px;
-        }
-        .hud-border-svg { position: absolute; top: -2px; left: -2px; width: calc(100% + 4px); height: calc(100% + 4px); pointer-events: none; stroke: currentColor; fill: none; stroke-width: 2; opacity: 0.8; }
-        
-        .top-left-panel { grid-column: 1 / span 2; grid-row: 1; display: flex; align-items: center; }
-        .team-title { font-size: 20px; font-weight: 900; letter-spacing: 1px; text-shadow: 0 0 10px currentColor; line-height: 1.3; }
+    const urlParams = new URLSearchParams(window.location.search);
+    const mode = urlParams.get('mode') || 'team';
+    const teamKey = urlParams.get('team') || 'A';
+    const mainView = document.getElementById('mainView');
 
-        .mid-left-panel { display: flex; justify-content: space-around; align-items: flex-end; grid-column: 1; grid-row: 2; min-height: 250px; padding: 15px 5px; border: 1px solid rgba(0, 240, 255, 0.15); background: rgba(0,0,0,0.2); }
-        .vertical-bar-container { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; width: 30%; height: 100%; gap: 8px; }
-        .v-bar-val { font-size: 12px; font-weight: bold; font-family: monospace; text-align: center; color: #fff; }
-        .v-bar-outer { width: 24px; flex-grow: 1; min-height: 150px; border: 2px solid rgba(0, 240, 255, 0.4); padding: 2px; background: rgba(0,0,0,0.6); position: relative; display: flex; align-items: flex-end; }
-        .v-bar-inner { width: 100%; background: currentColor; transition: height 0.6s cubic-bezier(0.1, 0.8, 0.3, 1); filter: drop-shadow(0 0 6px currentColor); }
-        .v-bar-grid { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(180deg, transparent 70%, #020608 70%); background-size: 100% 10px; pointer-events: none; }
-        .v-bar-label { font-size: 13px; font-weight: 900; text-shadow: 0 0 8px currentColor; text-align: center; margin-top: 4px; }
-        
-        .bottom-left-panel { grid-column: 1; grid-row: 3; border: 1px solid rgba(0, 240, 255, 0.2); background: rgba(0,0,0,0.3); position: relative; min-height: 60px; }
+    // 🔒 雙重安全鎖：防止寫入衝突與讀取塞車
+    let isLocked = false;
+    let isFetching = false;
 
-        .center-core { grid-column: 2; grid-row: 2; display: flex; justify-content: center; align-items: center; position: relative; }
-        .radar-group { width: 90%; height: 90%; max-width: 220px; }
-        .radar-circle { fill: none; stroke: currentColor; stroke-width: 1.5; transform-origin: center; }
-        .radar-rotate-fast { animation: rotateRadar 12s linear infinite; }
-        .radar-rotate-slow { animation: rotateRadar 25s linear reverse infinite; }
-
-        .top-right-panel {
-            grid-column: 3; grid-row: 1 / span 2; border: 2px solid rgba(0, 240, 255, 0.3); 
-            background: rgba(3, 12, 20, 0.7); padding: 18px; position: relative;
-            clip-path: polygon(0 0, 85% 0, 100% 10%, 100% 100%, 0 100%);
-            display: flex; flex-direction: column; gap: 12px; justify-content: flex-start;
-        }
-        .mission-content { font-size: 14px; line-height: 1.6; color: #ffffff; font-weight: bold; }
-        
-        .action-box { display: flex; flex-direction: column; margin-top: auto; }
-        .hud-btn {
-            display: block; width: 100%; padding: 12px 12px; background: rgba(0, 240, 255, 0.1);
-            border: 2px solid currentColor; color: currentColor; text-align: center; cursor: pointer; font-size: 13px; font-weight: 900;
-            transition: all 0.2s; clip-path: polygon(0 0, 95% 0, 100% 30%, 100% 100%, 5% 100%, 0 70%); margin-top: 8px;
-        }
-        .hud-btn:hover { background: currentColor; color: #020608; box-shadow: 0 0 15px currentColor; }
-        .hud-btn:disabled, .panel-sync-btn:disabled, .primary-btn:disabled, .host-select:disabled, .tab-btn:disabled {
-            opacity: 0.4 !important; cursor: not-allowed !important; background: rgba(50,50,50,0.5) !important; color: #888 !important; box-shadow: none !important;
-        }
-
-        .bottom-right-panel { 
-            grid-column: 3; grid-row: 3; border: 1px solid rgba(0, 240, 255, 0.2); padding: 10px; 
-            display: flex; flex-direction: column; justify-content: space-between; gap: 6px; 
-            clip-path: polygon(0 0, 100% 0, 100% 75%, 85% 100%, 0 100%); background: rgba(0,0,0,0.2);
-        }
-        .status-line { display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; color: rgba(0,240,255,0.6); }
-        
-        .panel-sync-btn {
-            width: 100%; background: #00ffaa; color: #020608; border: none;
-            padding: 8px 0; font-size: 13px; font-weight: 900; cursor: pointer;
-            box-shadow: 0 0 10px rgba(0, 255, 170, 0.3); transition: all 0.15s ease;
-            text-align: center; margin-top: 2px;
-        }
-        .panel-sync-btn:hover { background: #fff; color: #000; box-shadow: 0 0 15px #00ffaa; }
-
-        /* RWD Responsive Phone View Layout */
-        @media (max-width: 600px) {
-            .main-container { padding: 10px; align-items: flex-start; }
-            .hud-screen {
-                display: flex; flex-direction: column; 
-                width: 100%; min-height: auto; height: auto; padding: 15px; gap: 15px;
-            }
-            .top-left-panel { order: 1; }
-            .mid-left-panel { order: 3; min-height: 18px; padding: 15px 10px; } 
-            .v-bar-outer { min-height: 120px; }
-            .center-core { order: 2; padding: 10px 0; } 
-            .radar-group { max-width: 120px; }
-            .top-right-panel { order: 4; clip-path: none; min-height: auto; } 
-            .bottom-left-panel { display: none; } 
-            .bottom-right-panel { order: 5; clip-path: none; margin-top: 5px; } 
-            .panel-sync-btn { padding: 12px 0; font-size: 15px; } 
-        }
-
-        /* Host Screen Dashboard */
-        .host-screen {
-            position: absolute; top: 0; left: 0; width: 100%; min-height: 100%; z-index: 100;
-            background: #040d14; padding: 25px; color: #00f0ff; padding-bottom: 100px;
-        }
-        .host-top-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #00f0ff; padding-bottom: 10px; margin-bottom: 20px; }
-        .host-header { font-size: 26px; font-weight: 900; color: #ff7300; text-shadow: 0 0 10px #ff7300; }
-        .sync-indicator { font-size: 13px; color: #00ffaa; margin-left: 15px; font-weight: normal; }
-        .reset-btn { background: #ff3333; color: #fff; border: none; padding: 8px 16px; font-size: 14px; font-weight: bold; cursor: pointer; border-radius: 4px; }
-        
-        .round-tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        .tab-btn { flex: 1; min-width: 80px; padding: 12px; background: #0b1d28; border: 1px solid #00f0ff; color: #00f0ff; font-weight: bold; cursor: pointer; }
-        .tab-btn.active { background: #ff7300; color: #000; border-color: #ff7300; }
-        
-        .host-grid { display: grid; grid-template-columns: 1.2fr 1.1fr; gap: 20px; }
-        @media (max-width: 900px) { .host-grid { grid-template-columns: 1fr; } }
-        .control-panel-box { border: 2px solid rgba(0,240,255,0.3); background: rgba(0,0,0,0.4); padding: 20px; }
-        .panel-title { font-size: 18px; font-weight: bold; color: #fff; margin-bottom: 15px; border-left: 4px solid #ff7300; padding-left: 8px; }
-        
-        .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
-        .input-group { display: flex; flex-direction: column; gap: 5px; }
-        .host-select { background: #07141e; color: #fff; border: 1px solid #00f0ff; padding: 10px; font-size: 16px; font-weight: bold; width: 100%; }
-        
-        .action-bar { border-top: 1px dashed rgba(0,240,255,0.3); padding-top: 15px; margin-top: 15px; }
-        .primary-btn { width: 100%; padding: 14px; background: #ff7300; color: #fff; border: none; font-size: 18px; font-weight: bold; cursor: pointer; }
-        
-        .flow-tracker { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
-        .flow-step { padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); font-size: 15px; display: flex; justify-content: space-between; }
-        .flow-step.active { background: rgba(0,240,255,0.25); border-color: #00f0ff; color: #fff; }
-        .flow-step.done { color: rgba(255,255,255,0.4); background: rgba(0,0,0,0.4); }
-
-        .log-box { background: #020609; border: 1px solid rgba(0,240,255,0.2); padding: 15px; height: 220px; overflow-y: auto; font-size: 13px; line-height: 1.6; }
-        
-        .score-board { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        @media (max-width: 500px) { .score-board { grid-template-columns: 1fr; } }
-        .score-card { background: rgba(7, 20, 30, 0.8); border: 1px solid rgba(0,240,255,0.3); padding: 10px; }
-        .score-card-title { font-size: 13px; font-weight: bold; margin-bottom: 5px; }
-        .score-card-vals { font-size: 12px; color: #fff; display: flex; justify-content: space-between; }
-
-        .theme-A { --color: #ffb700; } .theme-B { --color: #00f0ff; } .theme-C { --color: #d400ff; } .theme-D { --color: #ff3333; } 
-        .theme-A, .theme-B, .theme-C, .theme-D { color: var(--color); border-color: var(--color); }
-        .theme-A .hud-screen, .theme-A .v-bar-outer { border-color: rgba(255,183,0,0.5); }
-        .theme-B .hud-screen, .theme-B .v-bar-outer { border-color: rgba(0,240,255,0.5); }
-        .theme-C .hud-screen, .theme-C .v-bar-outer { border-color: rgba(212,0,255,0.5); }
-        .theme-D .hud-screen, .theme-D .v-bar-outer { border-color: rgba(255,51,51,0.5); }
-
-        @keyframes rotateRadar { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes flash { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-    </style>
-</head>
-<body>
-
-    <div class="main-container" id="mainContainer">
-        <div id="mainView" style="width: 100%; display: flex; justify-content: center;"></div>
-    </div>
-
-    <script>
-        const API_URL = "https://bacon.pico.sh/matrix_ultra_speed_991";
-
-        const initialTeamsData = {
-            A: { name: "🏛️ 政府高層 SYSTEM", funds: 30, stability: 70, tech: 20, textName: "政府高層" }, 
-            B: { name: "🧪 社團科學家 SYSTEM", funds: 20, stability: 30, tech: 70, textName: "社團科學家" }, 
-            C: { name: "🏢 工廠資方 SYSTEM", funds: 70, stability: 30, tech: 20, textName: "工廠資方" }, 
-            D: { name: "🛠️ 底層勞工 SYSTEM", funds: 40, stability: 40, tech: 40, textName: "底層勞工" }  
-        };
-
-        const initialSystemState = {
-            version: 0, // 🪙 樂觀鎖版本控制欄位
-            currentRound: 1,
-            teams: JSON.parse(JSON.stringify(initialTeamsData)),
-            logs: ["[量子高階同步] 零延遲光纖通道已連接。"],
-            rounds: {
-                1: { status: '闖關中', w1: 'A', w2: 'B', l1: 'C', l2: 'D', currentTurnIdx: 0 },
-                2: { status: '闖關中', w1: 'A', w2: 'B', l1: 'C', l2: 'D', currentTurnIdx: 0 },
-                3: { status: '闖關中', w1: 'A', w2: 'B', l1: 'C', l2: 'D', currentTurnIdx: 0 },
-                4: { status: '闖關中', w1: 'A', w2: 'B', l1: 'C', l2: 'D', currentTurnIdx: 0 }
-            }
-        };
-
-        let systemState = JSON.parse(JSON.stringify(initialSystemState));
-
-        const urlParams = new URLSearchParams(window.location.search);
-        const mode = urlParams.get('mode') || 'team';
-        const teamKey = urlParams.get('team') || 'A';
-        const mainView = document.getElementById('mainView');
-
-        // 🔒 全域防併發互斥鎖
-        let isLocked = false;
-
-        // 🚀 核心雲端儲存：嚴格防止快取
-        async function saveState() {
-            try {
-                await fetch(API_URL, {
-                    method: 'POST',
-                    body: JSON.stringify(systemState),
-                    cache: "no-store",
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Pragma': 'no-cache',
-                        'Cache-Control': 'no-cache'
-                    }
-                });
-            } catch (e) {
-                console.error("Save state failed:", e);
-            }
-        }
-
-        // 🛰️ 核心雲端讀取：只接受最新 version
-        async function fetchState() {
-            if (isLocked) return; // 鎖定期間暫停定時輪詢，避免覆蓋與重複 Render
-            try {
-                const res = await fetch(`${API_URL}?t=${Date.now()}`, {
-                    cache: "no-store",
-                    headers: {
-                        'Pragma': 'no-cache',
-                        'Cache-Control': 'no-cache'
-                    }
-                });
-                if (res.ok) {
-                    const latest = await res.json();
-                    // 🛡️ 版本控制防禦：丟棄舊版本或相同版本的重複渲染
-                    if (latest && typeof latest.version === 'number' && latest.version > systemState.version) {
-                        systemState = latest;
-                        executeRender();
-                    }
+    // 🛰️ 核心雲端讀取：加入 isFetching 防止請求堆疊
+    async function fetchState() {
+        if (isLocked || isFetching) return; 
+        isFetching = true;
+        try {
+            const res = await fetch(`${API_URL}?t=${Date.now()}`, { cache: "no-store" });
+            if (res.ok) {
+                const latest = await res.json();
+                if (latest && typeof latest.version === 'number' && latest.version > systemState.version) {
+                    systemState = latest;
+                    executeRender();
                 }
-            } catch (e) {
-                console.error("Fetch state failed:", e);
             }
+        } catch (e) {
+            console.error("Fetch state failed:", e);
+        } finally {
+            isFetching = false;
         }
+    }
 
-        // ⚡ 核心統一資料修改流 (修改 -> 提升版本 -> 儲存 -> 拉取 -> 解鎖渲染)
-        async function mutateAndSyncState(mutationFn) {
-            if (isLocked) return;
-            isLocked = true; // 1. 鎖定全域，停用所有按鈕操作
-            setButtonsDisabled(true);
+    // ⚡ 終極統一資料修改流 (獲取最新 -> 執行修改 -> 提升版本 -> 儲存 -> 渲染)
+    async function mutateAndSyncState(mutationFn) {
+        if (isLocked) return;
+        isLocked = true; // 1. 全局上鎖
+        setButtonsDisabled(true);
 
-            try {
-                // 2. 執行記憶體修改
-                mutationFn();
-                
-                // 3. 提升版本號
-                systemState.version = (systemState.version || 0) + 1;
-                
-                // 4. 上傳至雲端
-                await saveState();
-                
-                // 5. 立即重新取得雲端最新狀態，確保資料完全同步落實
-                const res = await fetch(`${API_URL}?t=${Date.now()}`, {
-                    cache: "no-store",
-                    headers: { 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' }
-                });
-                if (res.ok) {
-                    const latest = await res.json();
-                    if (latest && typeof latest.version === 'number' && latest.version >= systemState.version) {
-                        systemState = latest;
-                    }
+        try {
+            // 2. 【防覆蓋關鍵】強制先拉取雲端最新狀態，確保我們是在最新的資料上做修改
+            const pullRes = await fetch(`${API_URL}?t=${Date.now()}`, { cache: "no-store" });
+            if (pullRes.ok) {
+                const latest = await pullRes.json();
+                if (latest && typeof latest.version === 'number' && latest.version > systemState.version) {
+                    systemState = latest; // 將本地基底更新為最新
                 }
-            } catch (e) {
-                console.error("Mutation sync sequence error:", e);
-            } finally {
-                // 6. 解除鎖定並刷新畫面
-                isLocked = false;
-                executeRender();
-                setButtonsDisabled(false);
             }
-        }
 
-        function executeRender() {
-            if (mode !== 'host') renderTeamView();
-            else renderHostView();
-        }
-
-        function setButtonsDisabled(disabled) {
-            const inputs = document.querySelectorAll('button, select');
-            inputs.forEach(el => { el.disabled = disabled; });
-        }
-
-        async function triggerManualSync() {
-            const btn = document.getElementById('panelSyncBtn');
-            if(btn) {
-                btn.innerText = "⏳ 零延遲同步中...";
-                btn.style.background = "#ff7300";
-            }
-            // 手動重整強制突破鎖定，拉取最新資料
-            const currentLock = isLocked;
+            // 3. 在最新的基底上執行修改邏輯
+            mutationFn();
+            
+            // 4. 提升版本號
+            systemState.version = (systemState.version || 0) + 1;
+            
+            // 5. 將最新結果上傳
+            await fetch(`${API_URL}?t=${Date.now()}`, {
+                method: 'POST',
+                body: JSON.stringify(systemState),
+                headers: { 'Content-Type': 'application/json' }, // 移除多餘 header 避免 CORS 報錯
+                cache: "no-store"
+            });
+            
+        } catch (e) {
+            console.error("Mutation sync error:", e);
+        } finally {
+            // 6. 解除鎖定並刷新畫面（直接顯示自己剛剛上傳的結果，速度最快）
             isLocked = false;
-            await fetchState();
-            isLocked = currentLock;
-            
-            setTimeout(() => {
-                if(btn) {
-                    btn.innerText = "✅ 同步成功";
-                    btn.style.background = "#ffffff";
-                    setTimeout(() => {
-                        btn.innerText = "⚡ 強制重整";
-                        btn.style.background = "#00ffaa";
-                    }, 400);
-                }
-            }, 100);
-        }
-
-        // 🧠 0.5 秒高頻自動全網同步定時器
-        setInterval(fetchState, 500);
-
-        // 初始化判斷與首次載入
-        (async () => {
-            if (mode === 'host') {
-                document.getElementById('mainContainer').style.display = "block";
-                document.body.className = "";
-            } else {
-                document.body.className = `theme-${teamKey}`;
-            }
-            // 首次加載前先拉取雲端最新版
-            try {
-                const res = await fetch(`${API_URL}?t=${Date.now()}`, { cache: "no-store" });
-                if (res.ok) {
-                    const latest = await res.json();
-                    if(latest && typeof latest.version === 'number') systemState = latest;
-                }
-            } catch(e){}
             executeRender();
-        })();
+            setButtonsDisabled(false);
+        }
+    }
 
-        function renderTeamView() {
-            const data = systemState.teams[teamKey];
-            const rIdx = systemState.currentRound;
-            const rData = systemState.rounds[rIdx];
-            
-            let identityText = "";
-            let statusText = "";
-            let canAction = false;
+    function executeRender() {
+        if (mode !== 'host') renderTeamView();
+        else renderHostView();
+    }
 
-            if (rData.status === '闖關中') {
-                identityText = "<span style='color:#00ffaa'>【🎮 關卡挑戰階段】</span>";
-                statusText = `📊 正在進行關卡闖關！<br>請全力取得優勢。<br><br>📢 等待主持人結算並廣播本輪順位...`;
+    function setButtonsDisabled(disabled) {
+        const inputs = document.querySelectorAll('button, select');
+        inputs.forEach(el => { el.disabled = disabled; });
+    }
+
+    async function triggerManualSync() {
+        const btn = document.getElementById('panelSyncBtn');
+        if(btn) {
+            btn.innerText = "⏳ 同步中...";
+            btn.style.background = "#ff7300";
+        }
+        
+        isFetching = false; // 強制放行
+        await fetchState();
+        executeRender(); // 強制重繪
+        
+        setTimeout(() => {
+            if(btn) {
+                btn.innerText = "✅ 已同步";
+                btn.style.background = "#ffffff";
+                setTimeout(() => {
+                    btn.innerText = "⚡ 強制重整";
+                    btn.style.background = "#00ffaa";
+                }, 400);
+            }
+        }, 100);
+    }
+
+    // 🧠 高頻自動同步定時器
+    setInterval(fetchState, 500);
+
+    // 初始化載入
+    (async () => {
+        if (mode === 'host') {
+            document.getElementById('mainContainer').style.display = "block";
+            document.body.className = "";
+        } else {
+            document.body.className = `theme-${teamKey}`;
+        }
+        await fetchState(); // 首次載入強制拉取
+        executeRender();
+    })();
+
+    // ----- 以下為遊戲邏輯 UI 渲染 (維持原樣) -----
+    function renderTeamView() {
+        const data = systemState.teams[teamKey];
+        const rIdx = systemState.currentRound;
+        const rData = systemState.rounds[rIdx];
+        
+        let identityText = "";
+        let statusText = "";
+        let canAction = false;
+
+        if (rData.status === '闖關中') {
+            identityText = "<span style='color:#00ffaa'>【🎮 關卡挑戰階段】</span>";
+            statusText = `📊 正在進行關卡闖關！<br>請全力取得優勢。<br><br>📢 等待主持人結算並廣播本輪順位...`;
+            canAction = false;
+        } else {
+            const turnOrder = [rData.w1, rData.w2, rData.l1, rData.l2];
+            if (rData.currentTurnIdx > 3) {
+                identityText = "<span style='color:#ffffff; opacity: 0.5;'>【🔚 本輪選擇已結束】</span>";
+                statusText = `請等待主持人切換至下一輪關卡！`;
                 canAction = false;
             } else {
-                const turnOrder = [rData.w1, rData.w2, rData.l1, rData.l2];
-                if (rData.currentTurnIdx > 3) {
-                    identityText = "<span style='color:#ffffff; opacity: 0.5;'>【🔚 本輪選擇已結束】</span>";
-                    statusText = `請等待主持人切換至下一輪關卡！`;
-                    canAction = false;
-                } else {
-                    const activeTeamNow = turnOrder[rData.currentTurnIdx];
-                    const activeTeamName = systemState.teams[activeTeamNow].textName;
-                    
-                    if (teamKey === rData.w1) identityText = "<span style='color:#ffb700'>【👑 第一順位】</span>";
-                    else if (teamKey === rData.w2) identityText = "<span style='color:#00ffaa'>【✨ 第二順位】</span>";
-                    else if (teamKey === rData.l1) identityText = "<span style='color:#ff5555'>【⚠️ 第三順位】</span>";
-                    else if (teamKey === rData.l2) identityText = "<span style='color:#ff3333'>【🚨 第四順位】</span>";
+                const activeTeamNow = turnOrder[rData.currentTurnIdx];
+                const activeTeamName = systemState.teams[activeTeamNow].textName;
+                
+                if (teamKey === rData.w1) identityText = "<span style='color:#ffb700'>【👑 第一順位】</span>";
+                else if (teamKey === rData.w2) identityText = "<span style='color:#00ffaa'>【✨ 第二順位】</span>";
+                else if (teamKey === rData.l1) identityText = "<span style='color:#ff5555'>【⚠️ 第三順位】</span>";
+                else if (teamKey === rData.l2) identityText = "<span style='color:#ff3333'>【🚨 第四順位】</span>";
 
-                    if (teamKey === activeTeamNow) {
-                        statusText = `<span style="color:#00ff00; font-size:15px; font-weight:900; animation: flash 1s infinite;">▶ 🚨 輪到你們決策！請下達因果法案。</span>`;
-                        canAction = true;
-                    } else {
-                        statusText = `等待中... 目前正由 <span style="color:#00f0ff;">[ ${activeTeamName} ]</span> 進行選擇。`;
-                    }
+                if (teamKey === activeTeamNow) {
+                    statusText = `<span style="color:#00ff00; font-size:15px; font-weight:900; animation: flash 1s infinite;">▶ 🚨 輪到你們決策！請下達因果法案。</span>`;
+                    canAction = true;
+                } else {
+                    statusText = `等待中... 目前正由 <span style="color:#00f0ff;">[ ${activeTeamName} ]</span> 進行選擇。`;
                 }
             }
+        }
 
-            mainView.innerHTML = `
-                <div class="hud-screen" id="hudScreen">
-                    <svg class="hud-border-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
-                        <path d="M 0,8 L 8,0 L 92,0 L 100,8 L 100,92 L 92,100 L 8,100 L 0,92 Z" />
-                    </svg>
-                    <div class="top-left-panel"><div class="team-title">${data.name}</div></div>
-                    <div class="mid-left-panel">
-                        <div class="vertical-bar-container">
-                            <span class="v-bar-val">${data.funds}</span>
-                            <div class="v-bar-outer"><div class="v-bar-inner" style="height: ${data.funds}%;"></div><div class="v-bar-grid"></div></div>
-                            <span class="v-bar-label">資產</span>
-                        </div>
-                        <div class="vertical-bar-container" style="color: #ff7300;">
-                            <span class="v-bar-val">${data.stability}</span>
-                            <div class="v-bar-outer"><div class="v-bar-inner" style="height: ${data.stability}%;"></div><div class="v-bar-grid"></div></div>
-                            <span class="v-bar-label">生命</span>
-                        </div>
-                        <div class="vertical-bar-container" style="color: #00ffaa;">
-                            <span class="v-bar-val">${data.tech}</span>
-                            <div class="v-bar-outer"><div class="v-bar-inner" style="height: ${data.tech}%;"></div><div class="v-bar-grid"></div></div>
-                            <span class="v-bar-label">科技</span>
-                        </div>
+        mainView.innerHTML = `
+            <div class="hud-screen" id="hudScreen">
+                <svg class="hud-border-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <path d="M 0,8 L 8,0 L 92,0 L 100,8 L 100,92 L 92,100 L 8,100 L 0,92 Z" />
+                </svg>
+                <div class="top-left-panel"><div class="team-title">${data.name}</div></div>
+                <div class="mid-left-panel">
+                    <div class="vertical-bar-container">
+                        <span class="v-bar-val">${data.funds}</span>
+                        <div class="v-bar-outer"><div class="v-bar-inner" style="height: ${data.funds}%;"></div><div class="v-bar-grid"></div></div>
+                        <span class="v-bar-label">資產</span>
                     </div>
-                    <div class="bottom-left-panel">
-                        <svg width="100%" height="100%" style="stroke:currentColor; fill:none; opacity:0.3; stroke-width:0.5;">
-                            <circle cx="50" cy="50" r="30" stroke-dasharray="4 4"/>
-                            <path d="M10,50 L90,50 M50,10 L50,90"/>
-                        </svg>
+                    <div class="vertical-bar-container" style="color: #ff7300;">
+                        <span class="v-bar-val">${data.stability}</span>
+                        <div class="v-bar-outer"><div class="v-bar-inner" style="height: ${data.stability}%;"></div><div class="v-bar-grid"></div></div>
+                        <span class="v-bar-label">生命</span>
                     </div>
-                    <div class="center-core">
-                        <svg class="radar-group" viewBox="0 0 200 200">
-                            <circle class="radar-circle radar-rotate-fast" cx="100" cy="100" r="85" stroke-dasharray="5 10 30 5"/>
-                            <polygon class="radar-circle radar-rotate-slow" points="100,45 148,72 148,128 100,155 52,128 52,72" stroke-dasharray="4 4"/>
-                            <circle class="radar-circle" cx="100" cy="100" r="15" stroke-width="2"/>
-                        </svg>
-                    </div>
-                    <div class="top-right-panel">
-                        <div class="mission-content">
-                            本階段狀態：<br>${identityText}<br><br>
-                            ${statusText}
-                        </div>
-                        <div class="action-box" style="display: ${canAction ? 'block' : 'none'};">
-                            <button class="hud-btn" ${isLocked ? 'disabled' : ''} onclick="executeMatrixChoice('A')">⚡ 方案甲：因果建構</button>
-                            <button class="hud-btn" ${isLocked ? 'disabled' : ''} onclick="executeMatrixChoice('B')">⚡ 方案乙：逆流破壞</button>
-                        </div>
-                    </div>
-                    <div class="bottom-right-panel">
-                        <div class="status-line"><span>ROUND: 0${rIdx} / 04</span><span>v${systemState.version || 0}</span></div>
-                        <button class="panel-sync-btn" id="panelSyncBtn" ${isLocked ? 'disabled' : ''} onclick="triggerManualSync()">⚡ 強制重整</button>
+                    <div class="vertical-bar-container" style="color: #00ffaa;">
+                        <span class="v-bar-val">${data.tech}</span>
+                        <div class="v-bar-outer"><div class="v-bar-inner" style="height: ${data.tech}%;"></div><div class="v-bar-grid"></div></div>
+                        <span class="v-bar-label">科技</span>
                     </div>
                 </div>
-            `;
-            if(isLocked) setButtonsDisabled(true);
-        }
+                <div class="bottom-left-panel">
+                    <svg width="100%" height="100%" style="stroke:currentColor; fill:none; opacity:0.3; stroke-width:0.5;">
+                        <circle cx="50" cy="50" r="30" stroke-dasharray="4 4"/>
+                        <path d="M10,50 L90,50 M50,10 L50,90"/>
+                    </svg>
+                </div>
+                <div class="center-core">
+                    <svg class="radar-group" viewBox="0 0 200 200">
+                        <circle class="radar-circle radar-rotate-fast" cx="100" cy="100" r="85" stroke-dasharray="5 10 30 5"/>
+                        <polygon class="radar-circle radar-rotate-slow" points="100,45 148,72 148,128 100,155 52,128 52,72" stroke-dasharray="4 4"/>
+                        <circle class="radar-circle" cx="100" cy="100" r="15" stroke-width="2"/>
+                    </svg>
+                </div>
+                <div class="top-right-panel">
+                    <div class="mission-content">
+                        本階段狀態：<br>${identityText}<br><br>
+                        ${statusText}
+                    </div>
+                    <div class="action-box" style="display: ${canAction ? 'block' : 'none'};">
+                        <button class="hud-btn" ${isLocked ? 'disabled' : ''} onclick="executeMatrixChoice('A')">⚡ 方案甲：因果建構</button>
+                        <button class="hud-btn" ${isLocked ? 'disabled' : ''} onclick="executeMatrixChoice('B')">⚡ 方案乙：逆流破壞</button>
+                    </div>
+                </div>
+                <div class="bottom-right-panel">
+                    <div class="status-line"><span>ROUND: 0${rIdx} / 04</span><span>v${systemState.version || 0}</span></div>
+                    <button class="panel-sync-btn" id="panelSyncBtn" ${isLocked ? 'disabled' : ''} onclick="triggerManualSync()">⚡ 強制重整</button>
+                </div>
+            </div>
+        `;
+        if(isLocked) setButtonsDisabled(true);
+    }
 
-        function executeMatrixChoice(choiceType) {
-            mutateAndSyncState(() => {
-                const rIdx = systemState.currentRound;
-                const rData = systemState.rounds[rIdx];
-                const turnOrder = [rData.w1, rData.w2, rData.l1, rData.l2];
-                const activeTeam = turnOrder[rData.currentTurnIdx];
-                let logDesc = "";
-                const clamp = (val) => Math.min(100, Math.max(0, val));
-
-                if (activeTeam === 'A') {
-                    if (choiceType === 'A') {
-                        systemState.teams.A.stability = clamp(systemState.teams.A.stability + 15);
-                        systemState.teams.A.tech = clamp(systemState.teams.A.tech + 5);
-                        systemState.teams.D.funds = clamp(systemState.teams.D.funds - 10);
-                        logDesc = "【政府高層】選擇方案甲。自身生命+15、科技+5；勞工資產-10。";
-                    } else {
-                        systemState.teams.A.funds = clamp(systemState.teams.A.funds + 20);
-                        systemState.teams.B.tech = clamp(systemState.teams.B.tech - 15);
-                        systemState.teams.C.stability = clamp(systemState.teams.C.stability - 10);
-                        logDesc = "【政府高層】選擇方案乙。自身資產+20；科學家科技-15、資方生命-10。";
-                    }
-                } 
-                else if (activeTeam === 'B') {
-                    if (choiceType === 'A') {
-                        systemState.teams.B.tech = clamp(systemState.teams.B.tech + 20);
-                        systemState.teams.A.tech = clamp(systemState.teams.A.tech + 10);
-                        logDesc = "【社團科學家】選擇方案甲。自身科技+20；政府科技+10。";
-                    } else {
-                        systemState.teams.B.stability = clamp(systemState.teams.B.stability + 25);
-                        systemState.teams.C.funds = clamp(systemState.teams.C.funds - 20);
-                        systemState.teams.D.stability = clamp(systemState.teams.D.stability - 10);
-                        logDesc = "【社團科學家】選擇方案乙。自身生命+25；資方資產-20、勞工生命-10。";
-                    }
-                } 
-                else if (activeTeam === 'C') {
-                    if (choiceType === 'A') {
-                        systemState.teams.C.funds = clamp(systemState.teams.C.funds + 15);
-                        systemState.teams.C.stability = clamp(systemState.teams.C.stability + 5);
-                        systemState.teams.D.funds = clamp(systemState.teams.D.funds - 15);
-                        logDesc = "【工廠資方】選擇方案甲。自身資產+15、生命+5；勞工資產-15。";
-                    } else {
-                        systemState.teams.C.tech = clamp(systemState.teams.C.tech + 20);
-                        systemState.teams.A.funds = clamp(systemState.teams.A.funds - 15);
-                        systemState.teams.B.stability = clamp(systemState.teams.B.stability - 10);
-                        logDesc = "【工廠資方】選擇方案乙。自身科技+20；政府資產-15、科學家生命-10。";
-                    }
-                } 
-                else if (activeTeam === 'D') {
-                    if (choiceType === 'A') {
-                        systemState.teams.D.stability = clamp(systemState.teams.D.stability + 20);
-                        systemState.teams.D.funds = clamp(systemState.teams.D.funds + 5);
-                        systemState.teams.C.funds = clamp(systemState.teams.C.funds - 10);
-                        logDesc = "【底層勞工】選擇方案甲。自身生命+20、資產+5；資方資產-10。";
-                    } else {
-                        systemState.teams.D.tech = clamp(systemState.teams.D.tech + 15);
-                        systemState.teams.A.stability = clamp(systemState.teams.A.stability - 15);
-                        systemState.teams.C.funds = clamp(systemState.teams.C.funds - 15);
-                        logDesc = "【底層勞工】選擇方案乙。自身科技+15；政府生命-15、資方資產-15。";
-                    }
-                }
-
-                systemState.rounds[rIdx].currentTurnIdx++;
-                systemState.logs.unshift(`[R${rIdx}-順位${rData.currentTurnIdx}] ${logDesc}`);
-            });
-        }
-
-        function renderHostView() {
+    function executeMatrixChoice(choiceType) {
+        mutateAndSyncState(() => {
             const rIdx = systemState.currentRound;
             const rData = systemState.rounds[rIdx];
-            const n_w1 = systemState.teams[rData.w1].textName;
-            const n_w2 = systemState.teams[rData.w2].textName;
-            const n_l1 = systemState.teams[rData.l1].textName;
-            const n_l2 = systemState.teams[rData.l2].textName;
+            const turnOrder = [rData.w1, rData.w2, rData.l1, rData.l2];
+            const activeTeam = turnOrder[rData.currentTurnIdx];
+            let logDesc = "";
+            const clamp = (val) => Math.min(100, Math.max(0, val));
 
-            mainView.innerHTML = `
-                <div class="host-screen">
-                    <div class="host-top-bar">
-                        <div class="host-header">🌌 量子核心主控台 <span class="sync-indicator">📡 樂觀鎖同步核可版 (v${systemState.version || 0})</span></div>
-                        <div style="display:flex; gap:10px;">
-                           <button class="reset-btn" ${isLocked ? 'disabled' : ''} onclick="resetSystem()">🚨 RESET</button>
+            if (activeTeam === 'A') {
+                if (choiceType === 'A') {
+                    systemState.teams.A.stability = clamp(systemState.teams.A.stability + 15);
+                    systemState.teams.A.tech = clamp(systemState.teams.A.tech + 5);
+                    systemState.teams.D.funds = clamp(systemState.teams.D.funds - 10);
+                    logDesc = "【政府高層】選擇方案甲。自身生命+15、科技+5；勞工資產-10。";
+                } else {
+                    systemState.teams.A.funds = clamp(systemState.teams.A.funds + 20);
+                    systemState.teams.B.tech = clamp(systemState.teams.B.tech - 15);
+                    systemState.teams.C.stability = clamp(systemState.teams.C.stability - 10);
+                    logDesc = "【政府高層】選擇方案乙。自身資產+20；科學家科技-15、資方生命-10。";
+                }
+            } 
+            else if (activeTeam === 'B') {
+                if (choiceType === 'A') {
+                    systemState.teams.B.tech = clamp(systemState.teams.B.tech + 20);
+                    systemState.teams.A.tech = clamp(systemState.teams.A.tech + 10);
+                    logDesc = "【社團科學家】選擇方案甲。自身科技+20；政府科技+10。";
+                } else {
+                    systemState.teams.B.stability = clamp(systemState.teams.B.stability + 25);
+                    systemState.teams.C.funds = clamp(systemState.teams.C.funds - 20);
+                    systemState.teams.D.stability = clamp(systemState.teams.D.stability - 10);
+                    logDesc = "【社團科學家】選擇方案乙。自身生命+25；資方資產-20、勞工生命-10。";
+                }
+            } 
+            else if (activeTeam === 'C') {
+                if (choiceType === 'A') {
+                    systemState.teams.C.funds = clamp(systemState.teams.C.funds + 15);
+                    systemState.teams.C.stability = clamp(systemState.teams.C.stability + 5);
+                    systemState.teams.D.funds = clamp(systemState.teams.D.funds - 15);
+                    logDesc = "【工廠資方】選擇方案甲。自身資產+15、生命+5；勞工資產-15。";
+                } else {
+                    systemState.teams.C.tech = clamp(systemState.teams.C.tech + 20);
+                    systemState.teams.A.funds = clamp(systemState.teams.A.funds - 15);
+                    systemState.teams.B.stability = clamp(systemState.teams.B.stability - 10);
+                    logDesc = "【工廠資方】選擇方案乙。自身科技+20；政府資產-15、科學家生命-10。";
+                }
+            } 
+            else if (activeTeam === 'D') {
+                if (choiceType === 'A') {
+                    systemState.teams.D.stability = clamp(systemState.teams.D.stability + 20);
+                    systemState.teams.D.funds = clamp(systemState.teams.D.funds + 5);
+                    systemState.teams.C.funds = clamp(systemState.teams.C.funds - 10);
+                    logDesc = "【底層勞工】選擇方案甲。自身生命+20、資產+5；資方資產-10。";
+                } else {
+                    systemState.teams.D.tech = clamp(systemState.teams.D.tech + 15);
+                    systemState.teams.A.stability = clamp(systemState.teams.A.stability - 15);
+                    systemState.teams.C.funds = clamp(systemState.teams.C.funds - 15);
+                    logDesc = "【底層勞工】選擇方案乙。自身科技+15；政府生命-15、資方資產-15。";
+                }
+            }
+
+            systemState.rounds[rIdx].currentTurnIdx++;
+            systemState.logs.unshift(`[R${rIdx}-順位${rData.currentTurnIdx}] ${logDesc}`);
+        });
+    }
+
+    function renderHostView() {
+        const rIdx = systemState.currentRound;
+        const rData = systemState.rounds[rIdx];
+        const n_w1 = systemState.teams[rData.w1].textName;
+        const n_w2 = systemState.teams[rData.w2].textName;
+        const n_l1 = systemState.teams[rData.l1].textName;
+        const n_l2 = systemState.teams[rData.l2].textName;
+
+        mainView.innerHTML = `
+            <div class="host-screen">
+                <div class="host-top-bar">
+                    <div class="host-header">🌌 量子核心主控台 <span class="sync-indicator">📡 極速防撞同步版 (v${systemState.version || 0})</span></div>
+                    <div style="display:flex; gap:10px;">
+                       <button class="reset-btn" ${isLocked ? 'disabled' : ''} onclick="resetSystem()">🚨 RESET</button>
+                    </div>
+                </div>
+                
+                <div class="round-tabs">
+                    ${[1,2,3,4].map(num => `<button class="tab-btn ${rIdx === num ? 'active' : ''}" ${isLocked ? 'disabled' : ''} onclick="switchRound(${num})">第 0${num} 輪</button>`).join('')}
+                </div>
+
+                <div class="score-board">
+                    <div class="score-card" style="border-color: #ffb700;">
+                        <div class="score-card-title" style="color: #ffb700;">🏛️ 政府高層</div>
+                        <div class="score-card-vals"><span>資產: ${systemState.teams.A.funds}</span><span>生命: ${systemState.teams.A.stability}</span><span>科技: ${systemState.teams.A.tech}</span></div>
+                    </div>
+                    <div class="score-card" style="border-color: #00f0ff;">
+                        <div class="score-card-title" style="color: #00f0ff;">🧪 社團科學家</div>
+                        <div class="score-card-vals"><span>資產: ${systemState.teams.B.funds}</span><span>生命: ${systemState.teams.B.stability}</span><span>科技: ${systemState.teams.B.tech}</span></div>
+                    </div>
+                    <div class="score-card" style="border-color: #d400ff;">
+                        <div class="score-card-title" style="color: #d400ff;">🏢 工廠資方</div>
+                        <div class="score-card-vals"><span>資產: ${systemState.teams.C.funds}</span><span>生命: ${systemState.teams.C.stability}</span><span>科技: ${systemState.teams.C.tech}</span></div>
+                    </div>
+                    <div class="score-card" style="border-color: #ff3333;">
+                        <div class="score-card-title" style="color: #ff3333;">🛠️ 底層勞工</div>
+                        <div class="score-card-vals"><span>資產: ${systemState.teams.D.funds}</span><span>生命: ${systemState.teams.D.stability}</span><span>科技: ${systemState.teams.D.tech}</span></div>
+                    </div>
+                </div>
+
+                <div class="host-grid">
+                    <div class="control-panel-box">
+                        <div class="panel-title">配置本輪順位 (狀態: <span style="color:#ff7300">${rData.status}</span>)</div>
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label>👑 第一順位</label>
+                                <select class="host-select" id="w1" ${isLocked ? 'disabled' : ''}>
+                                    <option value="A" ${rData.w1==='A'?'selected':''}>A 政府高層</option>
+                                    <option value="B" ${rData.w1==='B'?'selected':''}>B 社團科學家</option>
+                                    <option value="C" ${rData.w1==='C'?'selected':''}>C 工廠資方</option>
+                                    <option value="D" ${rData.w1==='D'?'selected':''}>D 底層勞工</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>👑 第二順位</label>
+                                <select class="host-select" id="w2" ${isLocked ? 'disabled' : ''}>
+                                    <option value="B" ${rData.w2==='B'?'selected':''}>B 社團科學家</option>
+                                    <option value="A" ${rData.w2==='A'?'selected':''}>A 政府高層</option>
+                                    <option value="C" ${rData.w2==='C'?'selected':''}>C 工廠資方</option>
+                                    <option value="D" ${rData.w2==='D'?'selected':''}>D 底層勞工</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label>⚠️ 第三順位</label>
+                                <select class="host-select" id="l1" ${isLocked ? 'disabled' : ''}>
+                                    <option value="C" ${rData.l1==='C'?'selected':''}>C 工廠資方</option>
+                                    <option value="A" ${rData.l1==='A'?'selected':''}>A 政府高層</option>
+                                    <option value="B" ${rData.l1==='B'?'selected':''}>B 社團科學家</option>
+                                    <option value="D" ${rData.l1==='D'?'selected':''}>D 底層勞工</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>⚠️ 第四順位</label>
+                                <select class="host-select" id="l2" ${isLocked ? 'disabled' : ''}>
+                                    <option value="D" ${rData.l2==='D'?'selected':''}>D 底層勞工</option>
+                                    <option value="A" ${rData.l2==='A'?'selected':''}>A 政府高層</option>
+                                    <option value="B" ${rData.l2==='B'?'selected':''}>B 社團科學家</option>
+                                    <option value="C" ${rData.l2==='C'?'selected':''}>C 工廠資方</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button class="primary-btn" ${isLocked ? 'disabled' : ''} onclick="applyRoundSettings()">廣播同步本輪順位</button>
+
+                        <div class="action-bar">
+                            <div class="panel-title">進度監視</div>
+                            <div class="flow-tracker" style="${rData.status === '闖關中' ? 'opacity:0.4; pointer-events:none;' : ''}">
+                                <div class="flow-step ${rData.status!=='闖關中'&&rData.currentTurnIdx===0?'active':(rData.currentTurnIdx>0?'done':'')}">
+                                    <span>① [ ${n_w1} ]</span> ${rData.status==='闖關中'?'未開啟':(rData.currentTurnIdx===0?'作答中':'✅ 已提')}
+                                </div>
+                                <div class="flow-step ${rData.status!=='闖關中'&&rData.currentTurnIdx===1?'active':(rData.currentTurnIdx>1?'done':'')}">
+                                    <span>② [ ${n_w2} ]</span> ${rData.status==='闖關中'?'未開啟':(rData.currentTurnIdx===1?'作答中':(rData.currentTurnIdx>1?'✅ 已提':'⏳ 等待'))}
+                                </div>
+                                <div class="flow-step ${rData.status!=='闖關中'&&rData.currentTurnIdx===2?'active':(rData.currentTurnIdx>2?'done':'')}">
+                                    <span>③ [ ${n_l1} ]</span> ${rData.status==='闖關中'?'未開啟':(rData.currentTurnIdx===2?'作答中':(rData.currentTurnIdx>2?'✅ 已提':'⏳ 等待'))}
+                                </div>
+                                <div class="flow-step ${rData.status!=='闖關中'&&rData.currentTurnIdx===3?'active':(rData.currentTurnIdx>3?'done':'')}">
+                                    <span>④ [ ${n_l2} ]</span> ${rData.status==='闖關中'?'未開啟':(rData.currentTurnIdx===3?'作答中':(rData.currentTurnIdx>3?'✅ 已提':'⏳ 等待'))}
+                                </div>
+                            </div>
+                            <button class="primary-btn" style="background:#00f0ff; color:#000; margin-top:12px;" ${rData.status === '闖關中' || rData.currentTurnIdx > 3 || isLocked ? 'disabled' : ''} onclick="forceNextTurn()">⏭️ 強制推進下一順位</button>
                         </div>
                     </div>
-                    
-                    <div class="round-tabs">
-                        ${[1,2,3,4].map(num => `<button class="tab-btn ${rIdx === num ? 'active' : ''}" ${isLocked ? 'disabled' : ''} onclick="switchRound(${num})">第 0${num} 輪</button>`).join('')}
-                    </div>
 
-                    <div class="score-board">
-                        <div class="score-card" style="border-color: #ffb700;">
-                            <div class="score-card-title" style="color: #ffb700;">🏛️ 政府高層</div>
-                            <div class="score-card-vals"><span>資產: ${systemState.teams.A.funds}</span><span>生命: ${systemState.teams.A.stability}</span><span>科技: ${systemState.teams.A.tech}</span></div>
-                        </div>
-                        <div class="score-card" style="border-color: #00f0ff;">
-                            <div class="score-card-title" style="color: #00f0ff;">🧪 社團科學家</div>
-                            <div class="score-card-vals"><span>資產: ${systemState.teams.B.funds}</span><span>生命: ${systemState.teams.B.stability}</span><span>科技: ${systemState.teams.B.tech}</span></div>
-                        </div>
-                        <div class="score-card" style="border-color: #d400ff;">
-                            <div class="score-card-title" style="color: #d400ff;">🏢 工廠資方</div>
-                            <div class="score-card-vals"><span>資產: ${systemState.teams.C.funds}</span><span>生命: ${systemState.teams.C.stability}</span><span>科技: ${systemState.teams.C.tech}</span></div>
-                        </div>
-                        <div class="score-card" style="border-color: #ff3333;">
-                            <div class="score-card-title" style="color: #ff3333;">🛠️ 底層勞工</div>
-                            <div class="score-card-vals"><span>資產: ${systemState.teams.D.funds}</span><span>生命: ${systemState.teams.D.stability}</span><span>科技: ${systemState.teams.D.tech}</span></div>
-                        </div>
-                    </div>
-
-                    <div class="host-grid">
-                        <div class="control-panel-box">
-                            <div class="panel-title">配置本輪順位 (狀態: <span style="color:#ff7300">${rData.status}</span>)</div>
-                            <div class="input-row">
-                                <div class="input-group">
-                                    <label>👑 第一順位</label>
-                                    <select class="host-select" id="w1" ${isLocked ? 'disabled' : ''}>
-                                        <option value="A" ${rData.w1==='A'?'selected':''}>A 政府高層</option>
-                                        <option value="B" ${rData.w1==='B'?'selected':''}>B 社團科學家</option>
-                                        <option value="C" ${rData.w1==='C'?'selected':''}>C 工廠資方</option>
-                                        <option value="D" ${rData.w1==='D'?'selected':''}>D 底層勞工</option>
-                                    </select>
-                                </div>
-                                <div class="input-group">
-                                    <label>👑 第二順位</label>
-                                    <select class="host-select" id="w2" ${isLocked ? 'disabled' : ''}>
-                                        <option value="B" ${rData.w2==='B'?'selected':''}>B 社團科學家</option>
-                                        <option value="A" ${rData.w2==='A'?'selected':''}>A 政府高層</option>
-                                        <option value="C" ${rData.w2==='C'?'selected':''}>C 工廠資方</option>
-                                        <option value="D" ${rData.w2==='D'?'selected':''}>D 底層勞工</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="input-row">
-                                <div class="input-group">
-                                    <label>⚠️ 第三順位</label>
-                                    <select class="host-select" id="l1" ${isLocked ? 'disabled' : ''}>
-                                        <option value="C" ${rData.l1==='C'?'selected':''}>C 工廠資方</option>
-                                        <option value="A" ${rData.l1==='A'?'selected':''}>A 政府高層</option>
-                                        <option value="B" ${rData.l1==='B'?'selected':''}>B 社團科學家</option>
-                                        <option value="D" ${rData.l1==='D'?'selected':''}>D 底層勞工</option>
-                                    </select>
-                                </div>
-                                <div class="input-group">
-                                    <label>⚠️ 第四順位</label>
-                                    <select class="host-select" id="l2" ${isLocked ? 'disabled' : ''}>
-                                        <option value="D" ${rData.l2==='D'?'selected':''}>D 底層勞工</option>
-                                        <option value="A" ${rData.l2==='A'?'selected':''}>A 政府高層</option>
-                                        <option value="B" ${rData.l2==='B'?'selected':''}>B 社團科學家</option>
-                                        <option value="C" ${rData.l2==='C'?'selected':''}>C 工廠資方</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <button class="primary-btn" ${isLocked ? 'disabled' : ''} onclick="applyRoundSettings()">廣播同步本輪順位</button>
-
-                            <div class="action-bar">
-                                <div class="panel-title">進度監視</div>
-                                <div class="flow-tracker" style="${rData.status === '闖關中' ? 'opacity:0.4; pointer-events:none;' : ''}">
-                                    <div class="flow-step ${rData.status!=='闖關中'&&rData.currentTurnIdx===0?'active':(rData.currentTurnIdx>0?'done':'')}">
-                                        <span>① [ ${n_w1} ]</span> ${rData.status==='闖關中'?'未開啟':(rData.currentTurnIdx===0?'作答中':'✅ 已提')}
-                                    </div>
-                                    <div class="flow-step ${rData.status!=='闖關中'&&rData.currentTurnIdx===1?'active':(rData.currentTurnIdx>1?'done':'')}">
-                                        <span>② [ ${n_w2} ]</span> ${rData.status==='闖關中'?'未開啟':(rData.currentTurnIdx===1?'作答中':(rData.currentTurnIdx>1?'✅ 已提':'⏳ 等待'))}
-                                    </div>
-                                    <div class="flow-step ${rData.status!=='闖關中'&&rData.currentTurnIdx===2?'active':(rData.currentTurnIdx>2?'done':'')}">
-                                        <span>③ [ ${n_l1} ]</span> ${rData.status==='闖關中'?'未開啟':(rData.currentTurnIdx===2?'作答中':(rData.currentTurnIdx>2?'✅ 已提':'⏳ 等待'))}
-                                    </div>
-                                    <div class="flow-step ${rData.status!=='闖關中'&&rData.currentTurnIdx===3?'active':(rData.currentTurnIdx>3?'done':'')}">
-                                        <span>④ [ ${n_l2} ]</span> ${rData.status==='闖關中'?'未開啟':(rData.currentTurnIdx===3?'作答中':(rData.currentTurnIdx>3?'✅ 已提':'⏳ 等待'))}
-                                    </div>
-                                </div>
-                                <button class="primary-btn" style="background:#00f0ff; color:#000; margin-top:12px;" ${rData.status === '闖關中' || rData.currentTurnIdx > 3 || isLocked ? 'disabled' : ''} onclick="forceNextTurn()">⏭️ 強制推進下一順位</button>
-                            </div>
-                        </div>
-
-                        <div class="control-panel-box">
-                            <div class="panel-title">📊 即時日誌</div>
-                            <div class="log-box" id="hostLogs">
-                                ${systemState.logs.map(l => `> ${l}<br>`).join('')}
-                            </div>
+                    <div class="control-panel-box">
+                        <div class="panel-title">📊 即時日誌</div>
+                        <div class="log-box" id="hostLogs">
+                            ${systemState.logs.map(l => `> ${l}<br>`).join('')}
                         </div>
                     </div>
                 </div>
-            `;
-            if(isLocked) setButtonsDisabled(true);
-        }
+            </div>
+        `;
+        if(isLocked) setButtonsDisabled(true);
+    }
 
-        function switchRound(num) {
-            mutateAndSyncState(() => {
-                systemState.currentRound = num;
-            });
-        }
+    function switchRound(num) {
+        mutateAndSyncState(() => { systemState.currentRound = num; });
+    }
 
-        function applyRoundSettings() {
-            mutateAndSyncState(() => {
-                const rIdx = systemState.currentRound;
-                systemState.rounds[rIdx].status = '連鎖選擇中';
-                systemState.rounds[rIdx].w1 = document.getElementById('w1').value;
-                systemState.rounds[rIdx].w2 = document.getElementById('w2').value;
-                systemState.rounds[rIdx].l1 = document.getElementById('l1').value;
-                systemState.rounds[rIdx].l2 = document.getElementById('l2').value;
-                systemState.rounds[rIdx].currentTurnIdx = 0; 
-                
-                const n_w1 = systemState.teams[systemState.rounds[rIdx].w1].textName;
-                systemState.logs.unshift(`[系統通知] 第 0${rIdx} 輪順位發布。控制權移交給【${n_w1}】。`);
-            });
-        }
+    function applyRoundSettings() {
+        mutateAndSyncState(() => {
+            const rIdx = systemState.currentRound;
+            systemState.rounds[rIdx].status = '連鎖選擇中';
+            systemState.rounds[rIdx].w1 = document.getElementById('w1').value;
+            systemState.rounds[rIdx].w2 = document.getElementById('w2').value;
+            systemState.rounds[rIdx].l1 = document.getElementById('l1').value;
+            systemState.rounds[rIdx].l2 = document.getElementById('l2').value;
+            systemState.rounds[rIdx].currentTurnIdx = 0; 
+            
+            const n_w1 = systemState.teams[systemState.rounds[rIdx].w1].textName;
+            systemState.logs.unshift(`[系統通知] 第 0${rIdx} 輪順位發布。控制權移交給【${n_w1}】。`);
+        });
+    }
 
-        function forceNextTurn() {
-            mutateAndSyncState(() => {
-                const rIdx = systemState.currentRound;
-                if (systemState.rounds[rIdx].currentTurnIdx < 4) {
-                    systemState.rounds[rIdx].currentTurnIdx++;
-                    systemState.logs.unshift(`[管理介入] 主持人手動跳過目前順位。`);
-                }
-            });
-        }
-
-        function resetSystem() {
-            if(confirm("🚨 確定要強制重製雲端系統嗎？")) {
-                mutateAndSyncState(() => {
-                    const freshState = JSON.parse(JSON.stringify(initialSystemState));
-                    systemState.currentRound = freshState.currentRound;
-                    systemState.teams = freshState.teams;
-                    systemState.rounds = freshState.rounds;
-                    systemState.logs = ["[系統重置] 樂觀鎖同步核心重置完成。"];
-                });
+    function forceNextTurn() {
+        mutateAndSyncState(() => {
+            const rIdx = systemState.currentRound;
+            if (systemState.rounds[rIdx].currentTurnIdx < 4) {
+                systemState.rounds[rIdx].currentTurnIdx++;
+                systemState.logs.unshift(`[管理介入] 主持人手動跳過目前順位。`);
             }
+        });
+    }
+
+    function resetSystem() {
+        if(confirm("🚨 確定要強制重製雲端系統嗎？")) {
+            mutateAndSyncState(() => {
+                const freshState = JSON.parse(JSON.stringify(initialSystemState));
+                systemState.currentRound = freshState.currentRound;
+                systemState.teams = freshState.teams;
+                systemState.rounds = freshState.rounds;
+                systemState.logs = ["[系統重置] 極速防撞同步核心重置完成。"];
+            });
         }
-    </script>
-</body>
-</html>
+    }
+</script>
