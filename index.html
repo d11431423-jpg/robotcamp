@@ -79,6 +79,7 @@
         }
         .host-top-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #00f0ff; padding-bottom: 10px; margin-bottom: 20px; }
         .host-header { font-size: 26px; font-weight: 900; color: #ff7300; text-shadow: 0 0 10px #ff7300; }
+        .sync-indicator { font-size: 13px; color: #00ffaa; margin-left: 15px; font-weight: normal; }
         .reset-btn { background: #ff3333; color: #fff; border: none; padding: 8px 16px; font-size: 14px; font-weight: bold; cursor: pointer; border-radius: 4px; box-shadow: 0 0 10px rgba(255,51,51,0.4); transition: background 0.2s; }
         .reset-btn:hover { background: #ff5555; }
         
@@ -129,7 +130,10 @@
     <div id="mainView"></div>
 
     <script>
-        // 4大陣營核心基礎常數
+        // 🔒 跨電腦房間識別碼（如果您想開多個不同房間，修改此暗號即可）
+        const ROOM_ID = "room_matrix_9958"; 
+        const API_URL = `https://kvdb.io/MN88Y6bS88VwR8Zp7bXg9H/${ROOM_ID}`;
+
         const initialTeamsData = {
             A: { name: "🏛️ 政府高層 SYSTEM", funds: 30, stability: 70, tech: 20, textName: "政府高層" }, 
             B: { name: "🧪 社團科學家 SYSTEM", funds: 20, stability: 30, tech: 70, textName: "社團科學家" }, 
@@ -137,11 +141,10 @@
             D: { name: "🛠️ 底層勞工 SYSTEM", funds: 40, stability: 40, tech: 40, textName: "底層勞工" }  
         };
 
-        // 初始全局狀態（包含陣營即時數值與日誌）
         const initialSystemState = {
             currentRound: 1,
             teams: JSON.parse(JSON.stringify(initialTeamsData)),
-            logs: ["[核心就緒] 量子矩陣已初始化，等待主持人開啟第一輪關卡。"],
+            logs: ["[系統就緒] 跨電腦量子矩陣已連線。等待主持人發布第一輪。"],
             rounds: {
                 1: { status: '闖關中', w1: 'A', w2: 'B', l1: 'C', l2: 'D', currentTurnIdx: 0 },
                 2: { status: '闖關中', w1: 'A', w2: 'B', l1: 'C', l2: 'D', currentTurnIdx: 0 },
@@ -151,46 +154,68 @@
         };
 
         let systemState = JSON.parse(JSON.stringify(initialSystemState));
-
-        if (localStorage.getItem('hud_system_state')) {
-            systemState = JSON.parse(localStorage.getItem('hud_system_state'));
-        }
-
-        function saveState() {
-            localStorage.setItem('hud_system_state', JSON.stringify(systemState));
-        }
+        let isPushing = false; // 防止連續上傳鎖死
 
         const urlParams = new URLSearchParams(window.location.search);
         const mode = urlParams.get('mode') || 'team';
         const teamKey = urlParams.get('team') || 'B';
         const mainView = document.getElementById('mainView');
 
-        // 每秒檢查一次 localStorage，保證所有人即時同步
-        setInterval(() => {
-            if (localStorage.getItem('hud_system_state')) {
-                const latest = JSON.parse(localStorage.getItem('hud_system_state'));
-                if (JSON.stringify(latest) !== JSON.stringify(systemState)) {
-                    systemState = latest;
-                    if (mode !== 'host') renderTeamView();
-                    else renderHostView();
-                }
+        // 🌐 跨電腦雲端同步機制：上傳資料
+        async function saveState() {
+            if (isPushing) return;
+            isPushing = true;
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(systemState),
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            } catch (e) {
+                console.error("雲端同步失敗:", e);
             }
-        }, 1000);
-
-        // 初始化渲染
-        if (mode === 'host') {
-            document.body.className = "";
-            renderHostView();
-        } else {
-            document.body.className = `theme-${teamKey}`;
-            renderTeamView();
+            isPushing = false;
         }
 
+        // 🌐 跨電腦雲端同步機制：下載更新
+        async function fetchState() {
+            try {
+                const res = await fetch(API_URL);
+                if (res.status === 200) {
+                    const latest = await res.json();
+                    if (JSON.stringify(latest) !== JSON.stringify(systemState)) {
+                        systemState = latest;
+                        if (mode !== 'host') renderTeamView();
+                        else renderHostView();
+                    }
+                } else if (res.status === 404 && mode === 'host') {
+                    // 如果雲端完全沒資料，由主控台初始化建立
+                    await saveState();
+                }
+            } catch (e) {
+                console.error("雲端讀取失敗:", e);
+            }
+        }
+
+        // 啟用極速輪詢 (每 1 秒自動跟雲端對齊，達成跨電腦秒動)
+        setInterval(fetchState, 1000);
+
+        // 網頁載入時先拉一次資料
+        fetchState().then(() => {
+            if (mode === 'host') {
+                document.body.className = "";
+                renderHostView();
+            } else {
+                document.body.className = `theme-${teamKey}`;
+                renderTeamView();
+            }
+        });
+
         // =========================================
-        // 📱 渲染隊員端 HUD 畫面（移除標題、實裝即時分數）
+        // 📱 隊員端 HUD 畫面
         // =========================================
         function renderTeamView() {
-            const data = systemState.teams[teamKey]; // 讀取全域即時變動的數值
+            const data = systemState.teams[teamKey];
             const rIdx = systemState.currentRound;
             const rData = systemState.rounds[rIdx];
             
@@ -200,14 +225,14 @@
 
             if (rData.status === '闖關中') {
                 identityText = "<span style='color:#00ffaa'>【🎮 關卡挑戰階段】</span>";
-                statusText = `<span style="color:#ffffff; opacity: 0.8;">📊 正在進行關卡闖關！<br>請全力取得優勢。<br><br>等待主持人結算並分配本輪順位...</span>`;
+                statusText = `<span style="color:#ffffff; opacity: 0.8;">📊 正在進行關卡闖關！<br>請全力取得優勢。<br><br>📢 等待主持人結算並廣播本輪順位...</span>`;
                 canAction = false;
             } else {
                 const turnOrder = [rData.w1, rData.w2, rData.l1, rData.l2];
                 
                 if (rData.currentTurnIdx > 3) {
                     identityText = "<span style='color:#ffffff; opacity: 0.5;'>【🔚 本輪選擇已結束】</span>";
-                    statusText = `請等待主持人切換到下一輪關卡！`;
+                    statusText = `請等待主持人切換至下一輪關卡！`;
                     canAction = false;
                 } else {
                     const activeTeamNow = turnOrder[rData.currentTurnIdx];
@@ -219,10 +244,10 @@
                     else if (teamKey === rData.l2) identityText = "<span style='color:#ff3333'>【🚨 第四順位】</span>";
 
                     if (teamKey === activeTeamNow) {
-                        statusText = `<span style="color:#00ff00; font-size:15px; font-weight:900; animation: flash 1s infinite;">▶ 🚨 輪到你們決策！請選擇一項因果法案提交。</span>`;
+                        statusText = `<span style="color:#00ff00; font-size:15px; font-weight:900; animation: flash 1s infinite;">▶ 🚨 輪到你們決策！請下達因果法案。</span>`;
                         canAction = true;
                     } else {
-                        statusText = `等待中... 目前正由 <span style="color:#00f0ff;">[ ${activeTeamName} ]</span> 執行第 ${rIdx} 輪選擇。`;
+                        statusText = `等待中... 目前正由 <span style="color:#00f0ff;">[ ${activeTeamName} ]</span> 進行選擇。`;
                     }
                 }
             }
@@ -272,7 +297,6 @@
                     </div>
 
                     <div class="top-right-panel">
-                        <!-- 依要求已完全剔除「階段 XX: 矩陣狀態」的標題，直接顯示狀態與動態按鈕 -->
                         <div class="mission-content">
                             本階段狀態：<br>${identityText}<br><br>
                             ${statusText}
@@ -293,87 +317,79 @@
         }
 
         // =========================================
-        // ⚡ 核心功能：選完自動算分 + 自動換下一個！
+        // ⚡ 隊伍按鈕點擊 -> 計算分數 + 異步推到雲端 -> 自動跳下一個人
         // =========================================
         function executeMatrixChoice(choiceType) {
             const rIdx = systemState.currentRound;
             const rData = systemState.rounds[rIdx];
             const turnOrder = [rData.w1, rData.w2, rData.l1, rData.l2];
             const activeTeam = turnOrder[rData.currentTurnIdx];
-            const teamName = systemState.teams[activeTeam].textName;
 
             let logDesc = "";
-
-            // 輔助限制數值在 0 ~ 100 區間
             const clamp = (val) => Math.min(100, Math.max(0, val));
 
-            // 計算分數改動
-            if (activeTeam === 'A') { // 政府高層
+            if (activeTeam === 'A') {
                 if (choiceType === 'A') {
                     systemState.teams.A.stability = clamp(systemState.teams.A.stability + 15);
                     systemState.teams.A.tech = clamp(systemState.teams.A.tech + 5);
                     systemState.teams.D.funds = clamp(systemState.teams.D.funds - 10);
-                    logDesc = "【政府高層】選擇【方案甲】：加強體制。自身生命+15、科技+5；導致底層勞工資產-10。";
+                    logDesc = "【政府高層】執行方案甲。自身生命+15、科技+5；勞工資產-10。";
                 } else {
                     systemState.teams.A.funds = clamp(systemState.teams.A.funds + 20);
                     systemState.teams.B.tech = clamp(systemState.teams.B.tech - 15);
                     systemState.teams.C.stability = clamp(systemState.teams.C.stability - 10);
-                    logDesc = "【政府高層】選擇【方案乙】：資產徵收。自身資產+20；導致科學家科技-15、工廠資方生命-10。";
+                    logDesc = "【政府高層】執行方案乙。自身資產+20；科學家科技-15、資方生命-10。";
                 }
             } 
-            else if (activeTeam === 'B') { // 社團科學家
+            else if (activeTeam === 'B') {
                 if (choiceType === 'A') {
                     systemState.teams.B.tech = clamp(systemState.teams.B.tech + 20);
                     systemState.teams.A.tech = clamp(systemState.teams.A.tech + 10);
-                    logDesc = "【社團科學家】選擇【方案甲】：開源研究。自身科技+20；引導政府高層科技+10。";
+                    logDesc = "【社團科學家】執行方案甲。自身科技+20；政府科技+10。";
                 } else {
                     systemState.teams.B.stability = clamp(systemState.teams.B.stability + 25);
                     systemState.teams.C.funds = clamp(systemState.teams.C.funds - 20);
                     systemState.teams.D.stability = clamp(systemState.teams.D.stability - 10);
-                    logDesc = "【社團科學家】選擇【方案乙】：禁忌實驗。自身生命+25；重挫工廠資方資產-20、底層勞工生命-10。";
+                    logDesc = "【社團科學家】執行方案乙。自身生命+25；資方資產-20、勞工生命-10。";
                 }
             } 
-            else if (activeTeam === 'C') { // 工廠資方
+            else if (activeTeam === 'C') {
                 if (choiceType === 'A') {
                     systemState.teams.C.funds = clamp(systemState.teams.C.funds + 15);
                     systemState.teams.C.stability = clamp(systemState.teams.C.stability + 5);
                     systemState.teams.D.funds = clamp(systemState.teams.D.funds - 15);
-                    logDesc = "【工廠資方】選擇【方案甲】：擴大壟斷。自身資產+15、生命+5；壓榨底層勞工資產-15。";
+                    logDesc = "【工廠資方】執行方案甲。自身資產+15、生命+5；勞工資產-15。";
                 } else {
                     systemState.teams.C.tech = clamp(systemState.teams.C.tech + 20);
                     systemState.teams.A.funds = clamp(systemState.teams.A.funds - 15);
                     systemState.teams.B.stability = clamp(systemState.teams.B.stability - 10);
-                    logDesc = "【工廠資方】選擇【方案乙】：自動化轉型。自身科技+20；削減政府資產-15、科學家生命-10。";
+                    logDesc = "【工廠資方】執行方案乙。自身科技+20；政府資產-15、科學家生命-10。";
                 }
             } 
-            else if (activeTeam === 'D') { // 底層勞工
+            else if (activeTeam === 'D') {
                 if (choiceType === 'A') {
                     systemState.teams.D.stability = clamp(systemState.teams.D.stability + 20);
                     systemState.teams.D.funds = clamp(systemState.teams.D.funds + 5);
                     systemState.teams.C.funds = clamp(systemState.teams.C.funds - 10);
-                    logDesc = "【底層勞工】選擇【方案甲】：聯合罷工。自身生命+20、資產+5；反噬工廠資方資產-10。";
+                    logDesc = "【底層勞工】執行方案甲。自身生命+20、資產+5；資方資產-10。";
                 } else {
                     systemState.teams.D.tech = clamp(systemState.teams.D.tech + 15);
                     systemState.teams.A.stability = clamp(systemState.teams.A.stability - 15);
                     systemState.teams.C.funds = clamp(systemState.teams.C.funds - 15);
-                    logDesc = "【底層勞工】選擇【方案乙】：地下反抗。自身科技+15；打擊政府生命-15、工廠資方資產-15。";
+                    logDesc = "【底層勞工】執行方案乙。自身科技+15；政府生命-15、資方資產-15。";
                 }
             }
 
-            // 【核心改動】自動推移到下一順位
             systemState.rounds[rIdx].currentTurnIdx++;
             systemState.logs.unshift(`[R${rIdx}-順位${rData.currentTurnIdx}] ${logDesc}`);
 
-            saveState();
-            
-            // 立即原地重新渲染，避免 1 秒的定時器延遲
-            renderTeamView();
-            alert(`【決策廣播成功】\n數值已自動演算，矩陣控制權已移交下一順位！`);
+            renderTeamView(); 
+            saveState(); // 同步上傳到雲端，另一台電腦的主控台就會秒收到！
         }
 
 
         // =========================================
-        // 🖥️ 渲染中央控制台大螢幕畫面 (新增即時數據版)
+        // 🖥️ 主持人控制台
         // =========================================
         function renderHostView() {
             const rIdx = systemState.currentRound;
@@ -387,7 +403,7 @@
             mainView.innerHTML = `
                 <div class="host-screen">
                     <div class="host-top-bar">
-                        <div class="host-header">🌌 臨界連鎖：量子核心中央主控台</div>
+                        <div class="host-header">🌌 量子核心主控台 <span class="sync-indicator">📡 跨電腦雲端同步中 (ID: ${ROOM_ID})</span></div>
                         <button class="reset-btn" onclick="resetSystem()">🚨 核心系統重製 (RESET)</button>
                     </div>
                     
@@ -397,7 +413,6 @@
                         `).join('')}
                     </div>
 
-                    <!-- 即時各隊分數看板 -->
                     <div class="score-board">
                         <div class="score-card" style="border-color: #ffb700;">
                             <div class="score-card-title" style="color: #ffb700;">🏛️ 政府高層</div>
@@ -469,19 +484,19 @@
                                 <div class="panel-title">第二步：因果流選擇進度監視 (系統會自動切換)</div>
                                 <div class="flow-tracker" style="${rData.status === '闖關中' ? 'opacity:0.4; pointer-events:none;' : ''}">
                                     <div class="flow-step ${rData.status!=='闖關中'&&rData.currentTurnIdx===0?'active':(rData.currentTurnIdx>0?'done':'')}">
-                                        <span>① 👑 第一順位 ➔ [ ${n_w1} ]</span> ${rData.status==='闖關中'?'未開啟':(rData.currentTurnIdx===0?'◀ 正在作答':'✅ 已提交完成')}
+                                        <span>① 👑 第一順位 ➔ [ ${n_w1} ]</span> ${rData.status==='闖關中'?'未開啟':(rData.currentTurnIdx===0?'◀ 正在作答':'✅ 已提交')}
                                     </div>
                                     <div class="flow-step ${rData.status!=='闖關中'&&rData.currentTurnIdx===1?'active':(rData.currentTurnIdx>1?'done':'')}">
-                                        <span>② 👑 第二順位 ➔ [ ${n_w2} ]</span> ${rData.status==='闖關中'?'未開啟':(rData.currentTurnIdx===1?'◀ 正在作答':(rData.currentTurnIdx>1?'✅ 已提交完成':'⏳ 等待中'))}
+                                        <span>② 👑 第二順位 ➔ [ ${n_w2} ]</span> ${rData.status==='闖關中'?'未開啟':(rData.currentTurnIdx===1?'◀ 正在作答':(rData.currentTurnIdx>1?'✅ 已提交':'⏳ 等待中'))}
                                     </div>
                                     <div class="flow-step ${rData.status!=='闖關中'&&rData.currentTurnIdx===2?'active':(rData.currentTurnIdx>2?'done':'')}">
-                                        <span>③ ⚠️ 第三順位 ➔ [ ${n_l1} ]</span> ${rData.status==='闖關中'?'未開啟':(rData.currentTurnIdx===2?'◀ 正在作答':(rData.currentTurnIdx>2?'✅ 已提交完成':'⏳ 等待中'))}
+                                        <span>③ ⚠️ 第三順位 ➔ [ ${n_l1} ]</span> ${rData.status==='闖關中'?'未開啟':(rData.currentTurnIdx===2?'◀ 正在作答':(rData.currentTurnIdx>2?'✅ 已提交':'⏳ 等待中'))}
                                     </div>
                                     <div class="flow-step ${rData.status!=='闖關中'&&rData.currentTurnIdx===3?'active':(rData.currentTurnIdx>3?'done':'')}">
-                                        <span>④ ⚠️ 第四順位 ➔ [ ${n_l2} ]</span> ${rData.status==='闖關中'?'未開啟':(rData.currentTurnIdx===3?'◀ 正在作答':(rData.currentTurnIdx>3?'✅ 已提交完成':'⏳ 等待中'))}
+                                        <span>④ ⚠️ 第四順位 ➔ [ ${n_l2} ]</span> ${rData.status==='闖關中'?'未開啟':(rData.currentTurnIdx===3?'◀ 正在作答':(rData.currentTurnIdx>3?'✅ 已提交':'⏳ 等待中'))}
                                     </div>
                                 </div>
-                                <button class="primary-btn" style="background:#00f0ff; color:#000; margin-top:12px;" ${rData.status === '闖關中' || rData.currentTurnIdx > 3 ? 'disabled' : ''} onclick="forceNextTurn()">⏭️ 管理員強制推進下一順位</button>
+                                <button class="primary-btn" style="background:#00f0ff; color:#000; margin-top:12px;" ${rData.status === '闖關中' || rData.currentTurnIdx > 3 ? 'disabled' : ''} onclick="forceNextTurn()">⏭️ 強制推進下一順位</button>
                             </div>
                         </div>
 
@@ -498,8 +513,8 @@
 
         function switchRound(num) {
             systemState.currentRound = num;
-            saveState();
             renderHostView();
+            saveState();
         }
 
         function applyRoundSettings() {
@@ -512,28 +527,27 @@
             systemState.rounds[rIdx].currentTurnIdx = 0; 
             
             const n_w1 = systemState.teams[systemState.rounds[rIdx].w1].textName;
-            systemState.logs.unshift(`[系統通知] 第 0${rIdx} 輪關卡闖關結算！控制權已流轉至第一順位【${n_w1}】。`);
+            systemState.logs.unshift(`[系統通知] 第 0${rIdx} 輪發布順位！控制權移交給【${n_w1}】。`);
             
-            saveState();
             renderHostView();
+            saveState();
         }
 
         function forceNextTurn() {
             const rIdx = systemState.currentRound;
             if (systemState.rounds[rIdx].currentTurnIdx < 4) {
                 systemState.rounds[rIdx].currentTurnIdx++;
-                systemState.logs.unshift(`[管理介入] 主持人強制跳過了目前順位的作答權。`);
-                saveState();
+                systemState.logs.unshift(`[管理介入] 主持人手動跳過目前順位。`);
                 renderHostView();
+                saveState();
             }
         }
 
         function resetSystem() {
-            if(confirm("🚨 警告：確定要強制重製量子核心系統嗎？\n這將會將所有隊伍分數歸於初始值，且清除所有回合進度！")) {
+            if(confirm("🚨 確定要強制重製雲端系統嗎？所有分數與進度都將被清空！")) {
                 systemState = JSON.parse(JSON.stringify(initialSystemState));
-                saveState();
                 renderHostView();
-                alert("系統已徹底重製。");
+                saveState();
             }
         }
     </script>
