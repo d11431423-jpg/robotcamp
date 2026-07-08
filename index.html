@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TACTICAL MATRIX HUD</title>
+    <title>TACTICAL MATRIX SYSTEM</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', Courier, monospace, "System-UI", sans-serif; }
         body, html { width: 100%; height: 100%; background-color: #020608; color: #00f0ff; overflow: hidden; position: relative; }
         
-        /* 數碼背景網格與科技氛圍 */
+        /* 數碼背景網格 */
         body::before {
             content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
             background-image: linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
@@ -19,91 +19,90 @@
             background: radial-gradient(circle, rgba(0,0,0,0) 50%, rgba(2,6,8,0.9) 100%); z-index: 2; pointer-events: none;
         }
 
-        /* 核心網格佈局 - 放大並微調比例 */
+        /* 隊員端 HUD 佈局 */
         .hud-screen {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 95vw; height: 95vw; max-width: 850px; max-height: 850px; z-index: 10;
-            background: rgba(4, 10, 15, 0.85);
-            border: 2px solid rgba(0, 240, 255, 0.3);
+            background: rgba(4, 10, 15, 0.85); border: 2px solid rgba(0, 240, 255, 0.3);
             box-shadow: 0 0 40px rgba(0, 240, 255, 0.1), inset 0 0 30px rgba(0, 240, 255, 0.05);
-            display: grid;
-            grid-template-columns: 1.2fr 2fr 1.4fr;
-            grid-template-rows: 0.6fr 2fr 0.8fr;
-            padding: 25px; gap: 20px;
+            display: grid; grid-template-columns: 1.2fr 2fr 1.4fr; grid-template-rows: 0.6fr 2fr 0.8fr; padding: 25px; gap: 20px;
         }
-
-        /* 裝飾性不對稱科技切角線 */
-        .hud-border-svg {
-            position: absolute; top: -2px; left: -2px; width: calc(100% + 4px); height: calc(100% + 4px);
-            pointer-events: none; stroke: currentColor; fill: none; stroke-width: 2; opacity: 0.8;
-        }
-
-        .top-left-panel { grid-column: 1; grid-row: 1; display: flex; align-items: center; justify-content: flex-start; }
-        /* 陣營名稱大字體化 */
+        .hud-border-svg { position: absolute; top: -2px; left: -2px; width: calc(100% + 4px); height: calc(100% + 4px); pointer-events: none; stroke: currentColor; fill: none; stroke-width: 2; opacity: 0.8; }
+        .top-left-panel { grid-column: 1; grid-row: 1; display: flex; align-items: center; }
         .team-title { font-size: 20px; font-weight: 900; letter-spacing: 2px; text-shadow: 0 0 10px currentColor; }
 
-        /* 左中：能量矩陣條 (改粗、字體加重) */
+        /* 左中：能量矩陣條 */
         .mid-left-panel { grid-column: 1; grid-row: 2; display: flex; gap: 20px; align-items: center; justify-content: center; }
         .vertical-bar-container { display: flex; flex-direction: column; align-items: center; gap: 10px; height: 90%; width: 35px; }
         .v-bar-label { font-size: 16px; font-weight: 900; text-shadow: 0 0 8px currentColor; }
         .v-bar-outer { width: 100%; height: 100%; border: 2px solid rgba(0, 240, 255, 0.4); padding: 3px; background: rgba(0,0,0,0.6); position: relative; }
         .v-bar-inner { width: 100%; background: currentColor; position: absolute; bottom: 3px; left: 3px; width: calc(100% - 6px); transition: height 0.6s cubic-bezier(0.1, 0.8, 0.3, 1); filter: drop-shadow(0 0 6px currentColor); }
         .v-bar-grid { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(0deg, transparent 70%, #020608 70%); background-size: 100% 14px; }
-
-        /* 左下：雷達坐標矩陣 */
         .bottom-left-panel { grid-column: 1; grid-row: 3; border: 1px solid rgba(0, 240, 255, 0.2); background: rgba(0,0,0,0.3); position: relative; }
 
-        /* 中央：完全捨棄圖片，改成精細的純 SVG 能量核心旋轉雷達 */
+        /* 中央：純數碼反應爐雷達 */
         .center-core { grid-column: 2; grid-row: 1 / span 3; display: flex; justify-content: center; align-items: center; position: relative; }
         .radar-group { width: 95%; height: 95%; }
         .radar-circle { fill: none; stroke: currentColor; stroke-width: 1.5; transform-origin: center; }
         .radar-rotate-fast { animation: rotateRadar 12s linear infinite; }
         .radar-rotate-slow { animation: rotateRadar 25s linear reverse infinite; }
 
-        /* 右上：MISSION 區塊字體全部放大加粗 */
+        /* 右上：MISSION 戰術指令板 */
         .top-right-panel {
             grid-column: 3; grid-row: 1 / span 2; border: 2px solid rgba(0, 240, 255, 0.3); 
             background: rgba(3, 12, 20, 0.7); padding: 20px; position: relative;
             clip-path: polygon(0 0, 85% 0, 100% 10%, 100% 100%, 0 100%);
             display: flex; flex-direction: column; gap: 12px;
         }
-        .mission-header { font-size: 18px; color: #ff7300; text-shadow: 0 0 8px #ff7300; font-weight: 900; border-bottom: 2px dashed rgba(255,115,0,0.4); padding-bottom: 8px; letter-spacing: 1px; }
-        .mission-content { font-size: 16px; line-height: 1.6; color: #ffffff; flex-grow: 1; font-weight: bold; text-shadow: 0 0 2px rgba(255,255,255,0.5); }
+        .mission-header { font-size: 18px; color: #ff7300; text-shadow: 0 0 8px #ff7300; font-weight: 900; border-bottom: 2px dashed rgba(255,115,0,0.4); padding-bottom: 8px; }
+        .mission-content { font-size: 16px; line-height: 1.6; color: #ffffff; flex-grow: 1; font-weight: bold; }
         
-        /* 按鈕視覺重構：大字體、高亮邊框 */
+        /* 行動按鈕（在非自己回合時會被鎖定隱藏） */
         .hud-btn {
             display: block; width: 100%; padding: 12px 15px; background: rgba(0, 240, 255, 0.1);
             border: 2px solid currentColor; color: currentColor; text-align: center; cursor: pointer; font-size: 15px; font-weight: 900;
-            letter-spacing: 1px; transition: all 0.2s; clip-path: polygon(0 0, 95% 0, 100% 30%, 100% 100%, 5% 100%, 0 70%); margin-top: 8px;
+            transition: all 0.2s; clip-path: polygon(0 0, 95% 0, 100% 30%, 100% 100%, 5% 100%, 0 70%); margin-top: 8px;
         }
         .hud-btn:hover { background: currentColor; color: #020608; box-shadow: 0 0 15px currentColor; }
+        .hud-btn:disabled { opacity: 0.2; cursor: not-allowed; border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.3); background: none; }
 
-        /* 右下：數據艙 */
-        .bottom-right-panel {
-            grid-column: 3; grid-row: 3; border: 1px solid rgba(0, 240, 255, 0.2);
-            padding: 15px; display: flex; flex-direction: column; justify-content: center; gap: 8px;
-            clip-path: polygon(0 0, 100% 0, 100% 75%, 85% 100%, 0 100%);
-        }
+        .bottom-right-panel { grid-column: 3; grid-row: 3; border: 1px solid rgba(0, 240, 255, 0.2); padding: 15px; display: flex; flex-direction: column; justify-content: center; gap: 8px; clip-path: polygon(0 0, 100% 0, 100% 75%, 85% 100%, 0 100%); }
         .status-line { display: flex; justify-content: space-between; font-size: 14px; font-weight: bold; color: rgba(0,240,255,0.8); }
 
-        /* 主持人中央主控台 */
+        /* =========================================
+           🖥️ 主持人總控制台專用視覺
+           ========================================= */
         .host-screen {
-            position: absolute; top: 5%; left: 5%; width: 90%; height: 90%; z-index: 20;
-            background: rgba(3, 8, 12, 0.98); border: 2px solid #00f0ff; padding: 30px;
-            display: flex; flex-direction: column; gap: 20px;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 100;
+            background: #040d14; padding: 25px; overflow-y: auto; color: #00f0ff;
         }
-        .host-title { font-size: 28px; text-align: center; border-bottom: 2px solid #00f0ff; padding-bottom: 10px; color: #ff7300; font-weight: 900; }
-        .host-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; flex-grow: 1; }
-        .host-panel-box { border: 2px dashed rgba(0,240,255,0.4); padding: 20px; background: rgba(0,0,0,0.5); }
-        select, button { background: #07141e; color: #00f0ff; border: 2px solid #00f0ff; padding: 15px; width: 100%; margin-top: 15px; font-size: 18px; font-weight: bold; cursor: pointer; }
-        button { background: #ff7300; color: white; border: none; }
-
-        /* 陣營色彩定義 */
-        .theme-A { --color: #ffb700; } 
-        .theme-B { --color: #00f0ff; } 
-        .theme-C { --color: #d400ff; } 
-        .theme-D { --color: #ff3333; } 
+        .host-header { font-size: 26px; font-weight: 900; text-align: center; color: #ff7300; text-shadow: 0 0 10px #ff7300; border-bottom: 2px solid #00f0ff; padding-bottom: 10px; margin-bottom: 20px; }
+        .round-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { flex: 1; padding: 12px; background: #0b1d28; border: 1px solid #00f0ff; color: #00f0ff; font-weight: bold; cursor: pointer; font-size: 16px; }
+        .tab-btn.active { background: #ff7300; color: #000; border-color: #ff7300; }
         
+        .host-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; }
+        .control-panel-box { border: 2px solid rgba(0,240,255,0.3); background: rgba(0,0,0,0.4); padding: 20px; border-radius: 4px; }
+        .panel-title { font-size: 18px; font-weight: bold; color: #fff; margin-bottom: 15px; border-left: 4px solid #ff7300; padding-left: 8px; }
+        
+        .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        .input-group { display: flex; flex-direction: column; gap: 5px; }
+        .input-group label { font-size: 14px; font-weight: bold; color: rgba(0,240,255,0.8); }
+        .host-select { background: #07141e; color: #fff; border: 1px solid #00f0ff; padding: 10px; font-size: 16px; font-weight: bold; }
+        
+        .action-bar { border-top: 1px dashed rgba(0,240,255,0.3); padding-top: 15px; margin-top: 15px; }
+        .primary-btn { width: 100%; padding: 14px; background: #ff7300; color: #fff; border: none; font-size: 18px; font-weight: bold; cursor: pointer; text-shadow: 0 1px 2px #000; }
+        .primary-btn:hover { background: #ff8c24; }
+        
+        .flow-tracker { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
+        .flow-step { padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); font-size: 15px; font-weight: bold; display: flex; justify-content: space-between; }
+        .flow-step.active { background: rgba(0,240,255,0.15); border-color: #00f0ff; color: #fff; box-shadow: 0 0 10px rgba(0,240,255,0.2); }
+        .flow-step.done { color: rgba(255,255,255,0.3); border-color: rgba(255,255,255,0.05); }
+
+        .log-box { background: #020609; border: 1px solid rgba(0,240,255,0.2); padding: 15px; height: 350px; overflow-y: auto; font-size: 14px; line-height: 1.6; }
+
+        /* 陣營色彩機制 */
+        .theme-A { --color: #ffb700; } .theme-B { --color: #00f0ff; } .theme-C { --color: #d400ff; } .theme-D { --color: #ff3333; } 
         .theme-A, .theme-B, .theme-C, .theme-D { color: var(--color); border-color: var(--color); }
         .theme-A .hud-screen, .theme-A .v-bar-outer { border-color: rgba(255,183,0,0.5); }
         .theme-B .hud-screen, .theme-B .v-bar-outer { border-color: rgba(0,240,255,0.5); }
@@ -113,12 +112,12 @@
         @keyframes rotateRadar { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="theme-B">
+<body>
 
     <div id="mainView"></div>
 
     <script>
-        // 純數據庫，不包含任何外部圖片網址
+        // 4大陣營固定基本數據
         const globalData = {
             A: { name: "🏛️ 政府高層 SYSTEM", funds: 85, stability: 95, tech: 45 }, 
             B: { name: "🧪 社團科學家 SYSTEM", funds: 60, stability: 70, tech: 90 }, 
@@ -126,11 +125,44 @@
             D: { name: "🛠️ 底層勞工 SYSTEM", funds: 45, stability: 80, tech: 35 }  
         };
 
+        // 核心狀態管理 (4輪完整勝負與順序)
+        let systemState = {
+            currentRound: 1,
+            // 每輪結果配置：W1(贏家A), W2(贏家B), L1(輸家A), L2(輸家B)
+            rounds: {
+                1: { w1: 'A', w2: 'B', l1: 'C', l2: 'D', currentTurnIdx: 0 },
+                2: { w1: 'A', w2: 'B', l1: 'C', l2: 'D', currentTurnIdx: 0 },
+                3: { w1: 'A', w2: 'B', l1: 'C', l2: 'D', currentTurnIdx: 0 },
+                4: { w1: 'A', w2: 'B', l1: 'C', l2: 'D', currentTurnIdx: 0 }
+            }
+        };
+
+        // 從 LocalStorage 自動回復狀態（防止主控台重新整理網頁洗掉紀錄）
+        if (localStorage.getItem('hud_system_state')) {
+            systemState = JSON.parse(localStorage.getItem('hud_system_state'));
+        }
+
+        function saveState() {
+            localStorage.setItem('hud_system_state', JSON.stringify(systemState));
+        }
+
         const urlParams = new URLSearchParams(window.location.search);
         const mode = urlParams.get('mode') || 'team';
         const teamKey = urlParams.get('team') || 'B';
         const mainView = document.getElementById('mainView');
 
+        // 定時檢查更新機制（模擬即時連線廣播：每1.5秒從本地同步一次狀態）
+        setInterval(() => {
+            if (localStorage.getItem('hud_system_state')) {
+                const latest = JSON.parse(localStorage.getItem('hud_system_state'));
+                if (latest.rounds[latest.currentRound].currentTurnIdx !== systemState.rounds[systemState.currentRound].currentTurnIdx || latest.currentRound !== systemState.currentRound) {
+                    systemState = latest;
+                    if (mode !== 'host') renderTeamView();
+                }
+            }
+        }, 1500);
+
+        // 進入對應模式
         if (mode === 'host') {
             document.body.className = "";
             renderHostView();
@@ -139,13 +171,38 @@
             renderTeamView();
         }
 
+        // =========================================
+        // 📱 渲染隊員端 HUD 畫面
+        // =========================================
         function renderTeamView() {
             const data = globalData[teamKey];
+            const rIdx = systemState.currentRound;
+            const rData = systemState.rounds[rIdx];
+            
+            // 計算目前輪到哪個陣營進行選擇
+            const turnOrder = [rData.w1, rData.w2, rData.l1, rData.l2];
+            const activeTeamNow = turnOrder[rData.currentTurnIdx];
+            
+            // 判定目前自己在這個回合的身分與狀態
+            let statusText = "";
+            let isMyTurn = (teamKey === activeTeamNow);
+            
+            let identityText = "";
+            if (teamKey === rData.w1) identityText = "<span style='color:#ffb700'>【👑 贏家 A】</span>";
+            else if (teamKey === rData.w2) identityText = "<span style='color:#00ffaa'>【👑 贏家 B】</span>";
+            else if (teamKey === rData.l1) identityText = "<span style='color:#ff3333'>【⚠️ 輸家 A】</span>";
+            else if (teamKey === rData.l2) identityText = "<span style='color:#ff5555'>【⚠️ 輸家 B】</span>";
+
+            if (isMyTurn) {
+                statusText = `<span style="color:#00ff00; animation: flash 1s infinite;">▶ 🚨 輪到你們決策！請下達決斷。</span>`;
+            } else {
+                statusText = `等待中... 目前正由陣營 [ ${activeTeamNow} ] 進行第 ${rIdx} 輪選擇。`;
+            }
+
             mainView.innerHTML = `
                 <div class="hud-screen" id="hudScreen">
                     <svg class="hud-border-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
                         <path d="M 0,8 L 8,0 L 92,0 L 100,8 L 100,92 L 92,100 L 8,100 L 0,92 Z" />
-                        <path d="M 0,15 L 0,30 M 100,15 L 100,30 M 30,0 L 45,0 M 55,0 L 70,0" stroke-width="1.5"/>
                     </svg>
 
                     <div class="top-left-panel">
@@ -153,84 +210,192 @@
                     </div>
 
                     <div class="mid-left-panel">
-                        <div class="vertical-bar-container" style="color: currentColor;">
-                            <span class="v-bar-label">FD</span>
-                            <div class="v-bar-outer"><div class="v-bar-inner" style="height: ${data.funds}%;"></div><div class="v-bar-grid"></div></div>
-                        </div>
-                        <div class="vertical-bar-container" style="color: #ff7300;">
-                            <span class="v-bar-label">ST</span>
-                            <div class="v-bar-outer"><div class="v-bar-inner" style="height: ${data.stability}%;"></div><div class="v-bar-grid"></div></div>
-                        </div>
-                        <div class="vertical-bar-container" style="color: #00ffaa;">
-                            <span class="v-bar-label">TC</span>
-                            <div class="v-bar-outer"><div class="v-bar-inner" style="height: ${data.tech}%;"></div><div class="v-bar-grid"></div></div>
-                        </div>
+                        <div class="vertical-bar-container"><span class="v-bar-label">FD</span><div class="v-bar-outer"><div class="v-bar-inner" style="height: ${data.funds}%;"></div><div class="v-bar-grid"></div></div></div>
+                        <div class="vertical-bar-container" style="color: #ff7300;"><span class="v-bar-label">ST</span><div class="v-bar-outer"><div class="v-bar-inner" style="height: ${data.stability}%;"></div><div class="v-bar-grid"></div></div></div>
+                        <div class="vertical-bar-container" style="color: #00ffaa;"><span class="v-bar-label">TC</span><div class="v-bar-outer"><div class="v-bar-inner" style="height: ${data.tech}%;"></div><div class="v-bar-grid"></div></div></div>
                     </div>
 
                     <div class="bottom-left-panel">
-                        <svg width="100%" height="100%" style="stroke:currentColor; fill:none; opacity:0.4; stroke-width:0.5;">
-                            <line x1="0" y1="50" x2="100" y2="50" stroke-dasharray="2 2"/>
-                            <line x1="50" y1="0" x2="50" y2="100" stroke-dasharray="2 2"/>
+                        <svg width="100%" height="100%" style="stroke:currentColor; fill:none; opacity:0.3; stroke-width:0.5;">
                             <circle cx="50" cy="50" r="30" stroke-dasharray="4 4"/>
+                            <path d="M10,50 L90,50 M50,10 L50,90"/>
                         </svg>
                     </div>
 
-                    <!-- 中央改為純數碼高科技核心（類似反應爐的精細網格） -->
                     <div class="center-core">
                         <svg class="radar-group" viewBox="0 0 200 200">
-                            <!-- 外層旋轉刻度 -->
                             <circle class="radar-circle radar-rotate-fast" cx="100" cy="100" r="85" stroke-dasharray="5 10 30 5"/>
-                            <circle class="radar-circle radar-rotate-slow" cx="100" cy="100" r="75" stroke-dasharray="40 10 10 10"/>
-                            <!-- 中層多角形核心 -->
-                            <polygon class="radar-circle radar-rotate-fast" points="100,45 148,72 148,128 100,155 52,128 52,72" stroke-dasharray="4 4"/>
-                            <!-- 內層核心幾何圖形 -->
-                            <circle class="radar-circle" cx="100" cy="100" r="35" stroke-width="2"/>
-                            <circle class="radar-circle radar-rotate-slow" cx="100" cy="100" r="25" stroke-dasharray="6 6"/>
-                            <circle class="radar-circle" cx="100" cy="100" r="8" fill="currentColor" opacity="0.7"/>
-                            <!-- 十字定位線 -->
-                            <path d="M 100,0 L 100,200 M 0,100 L 200,100" stroke="currentColor" stroke-width="0.5" stroke-opacity="0.3"/>
+                            <polygon class="radar-circle radar-rotate-slow" points="100,45 148,72 148,128 100,155 52,128 52,72" stroke-dasharray="4 4"/>
+                            <circle class="radar-circle" cx="100" cy="100" r="15" stroke-width="2"/>
+                            <path d="M 100,0 L 100,200 M 0,100 L 200,100" stroke="currentColor" stroke-width="0.5" stroke-opacity="0.2"/>
                         </svg>
                     </div>
 
                     <div class="top-right-panel">
-                        <div class="mission-header">🛰️ SYSTEM STATUS</div>
-                        <div class="mission-content">QUANTUM NET ACTIVE.<br><br>系統連線成功。<br>正在等待中央控制台下達大抉擇指令...</div>
+                        <div class="mission-header">🛰️ ROUND 0${rIdx} : STATUS</div>
+                        <div class="mission-content">
+                            本輪身分：${identityText}<br><br>
+                            ${statusText}
+                        </div>
                         <div>
-                            <button class="hud-btn">▶ 執行系統測試</button>
-                            <button class="hud-btn">▶ 定位同步回傳</button>
+                            <button class="hud-btn" ${!isMyTurn ? 'disabled' : ''} onclick="teamAction('🎯 執行：保守型因果修正')">⚡ 方案甲：因果建構</button>
+                            <button class="hud-btn" ${!isMyTurn ? 'disabled' : ''} onclick="teamAction('🔥 執行：激進型矩陣爆發')">⚡ 方案乙：逆流破壞</button>
                         </div>
                     </div>
 
                     <div class="bottom-right-panel">
+                        <div class="status-line"><span>ROUND:</span><span>0${rIdx} / 04</span></div>
                         <div class="status-line"><span>MATRIX:</span><span>ONLINE</span></div>
-                        <div class="status-line"><span>SIGNAL:</span><span>SECURE</span></div>
                     </div>
                 </div>
             `;
         }
 
+        function teamAction(actionName) {
+            alert(`【決策成功】已提交: ${actionName}。請通知主持人切換下一位選擇者！`);
+        }
+
+
+        // =========================================
+        // 🖥️ 渲染中央控制台大螢幕畫面
+        // =========================================
         function renderHostView() {
+            const rIdx = systemState.currentRound;
+            const rData = systemState.rounds[rIdx];
+
             mainView.innerHTML = `
                 <div class="host-screen">
-                    <div class="host-title">🌌 臨界連鎖：量子控制台</div>
-                    <div class="host-columns">
-                        <div class="host-panel-box">
-                            <h3>🤖 第一步：對決勝負宣判</h3>
-                            <select id="winSelect">
-                                <option value="A">A 隊 - 政府高層</option>
-                                <option value="B">B 隊 - 社團科學家</option>
-                                <option value="C">C 隊 - 工廠資方</option>
-                                <option value="D">D 隊 - 底層勞工</option>
-                            </select>
-                            <button onclick="alert('指令已同步！')">📡 啟動全場連鎖大抉擇</button>
+                    <div class="host-header">🌌 臨界連鎖：量子核心中央主控台 (大螢幕總系統)</div>
+                    
+                    <!-- 輪次切換頁籤 -->
+                    <div class="round-tabs">
+                        ${[1,2,3,4].map(num => `
+                            <button class="tab-btn ${rIdx === num ? 'active' : ''}" onclick="switchRound(${num})">第 0${num} 輪戰局</button>
+                        `).join('')}
+                    </div>
+
+                    <div class="host-grid">
+                        <!-- 左側：輸入與流程控管 -->
+                        <div class="control-panel-box">
+                            <div class="panel-title">第一步：配置本輪【雙贏雙輸】名單</div>
+                            
+                            <div class="input-row">
+                                <div class="input-group">
+                                    <label>👑 贏家 A (率先選擇)</label>
+                                    <select class="host-select" id="w1">
+                                        <option value="A" ${rData.w1==='A'?'selected':''}>A 隊 - 政府高層</option>
+                                        <option value="B" ${rData.w1==='B'?'selected':''}>B 隊 - 社團科學家</option>
+                                        <option value="C" ${rData.w1==='C'?'selected':''}>C 隊 - 工廠資方</option>
+                                        <option value="D" ${rData.w1==='D'?'selected':''}>D 隊 - 底層勞工</option>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <label>👑 贏家 B (第二選擇)</label>
+                                    <select class="host-select" id="w2">
+                                        <option value="B" ${rData.w2==='B'?'selected':''}>B 隊 - 社團科學家</option>
+                                        <option value="A" ${rData.w2==='A'?'selected':''}>A 隊 - 政府高層</option>
+                                        <option value="C" ${rData.w2==='C'?'selected':''}>C 隊 - 工廠資方</option>
+                                        <option value="D" ${rData.w2==='D'?'selected':''}>D 隊 - 底層勞工</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="input-row">
+                                <div class="input-group">
+                                    <label>⚠️ 輸家 A (第三選擇)</label>
+                                    <select class="host-select" id="l1">
+                                        <option value="C" ${rData.l1==='C'?'selected':''}>C 隊 - 工廠資方</option>
+                                        <option value="A" ${rData.l1==='A'?'selected':''}>A 隊 - 政府高層</option>
+                                        <option value="B" ${rData.l1==='B'?'selected':''}>B 隊 - 社團科學家</option>
+                                        <option value="D" ${rData.l1==='D'?'selected':''}>D 隊 - 底層勞工</option>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <label>⚠️ 輸家 B (第四選擇)</label>
+                                    <select class="host-select" id="l2">
+                                        <option value="D" ${rData.l2==='D'?'selected':''}>D 隊 - 底層勞工</option>
+                                        <option value="A" ${rData.l2==='A'?'selected':''}>A 隊 - 政府高層</option>
+                                        <option value="B" ${rData.l2==='B'?'selected':''}>B 隊 - 社團科學家</option>
+                                        <option value="C" ${rData.l2==='C'?'selected':''}>C 隊 - 工廠資方</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <button class="primary-btn" onclick="applyRoundSettings()">📡 廣播同步本輪勝負名單</button>
+
+                            <div class="action-bar" style="margin-top:25px;">
+                                <div class="panel-title">第二步：因果流選擇動態控制（點擊推進）</div>
+                                <div class="flow-tracker">
+                                    <div class="flow-step ${rData.currentTurnIdx===0?'active':(rData.currentTurnIdx>0?'done':'')}" onclick="setTurn(0)">
+                                        <span>① 贏家 A ➔ [ 陣營 ${rData.w1} ] 選擇中</span> ${rData.currentTurnIdx===0?'◀':'已完成'}
+                                    </div>
+                                    <div class="flow-step ${rData.currentTurnIdx===1?'active':(rData.currentTurnIdx>1?'done':'')}" onclick="setTurn(1)">
+                                        <span>② 贏家 B ➔ [ 陣營 ${rData.w2} ] 選擇中</span> ${rData.currentTurnIdx===1?'◀':(rData.currentTurnIdx>1?'已完成':'等待')}
+                                    </div>
+                                    <div class="flow-step ${rData.currentTurnIdx===2?'active':(rData.currentTurnIdx>2?'done':'')}" onclick="setTurn(2)">
+                                        <span>③ 輸家 A ➔ [ 陣營 ${rData.l1} ] 選擇中</span> ${rData.currentTurnIdx===2?'◀':(rData.currentTurnIdx>2?'死局已定':'等待')}
+                                    </div>
+                                    <div class="flow-step ${rData.currentTurnIdx===3?'active':''}" onclick="setTurn(3)">
+                                        <span>④ 輸家 B ➔ [ 陣營 ${rData.l2} ] 選擇中</span> ${rData.currentTurnIdx===3?'◀':'等待'}
+                                    </div>
+                                </div>
+                                <button class="primary-btn" style="background:#00f0ff; color:#000; margin-top:15px;" onclick="nextTurn()">⏭️ 強制推進至下一位順位</button>
+                            </div>
                         </div>
-                        <div class="host-panel-box">
-                            <h3>📊 戰術通訊日誌</h3>
-                            <div style="font-size:16px; color:rgba(0,240,255,0.7);">[天網核心] 數據流初始化成功，等待對決信號。</div>
+
+                        <!-- 右側：日誌 -->
+                        <div class="control-panel-box">
+                            <div class="panel-title">📊 量子通訊即時日誌</div>
+                            <div class="log-box" id="hostLogs">
+                                [系統通知] 量子控制台就緒。當前處於第 0${rIdx} 輪戰局。<br>
+                                [當前順序] 順序已被天網鎖定為：${rData.w1} ➔ ${rData.w2} ➔ ${rData.l1} ➔ ${rData.l2}。
+                            </div>
                         </div>
                     </div>
                 </div>
             `;
+        }
+
+        // 控制台邏輯：切換輪次
+        function switchRound(num) {
+            systemState.currentRound = num;
+            saveState();
+            renderHostView();
+        }
+
+        // 控制台邏輯：廣播當前輪次的名單設定
+        function applyRoundSettings() {
+            const rIdx = systemState.currentRound;
+            systemState.rounds[rIdx].w1 = document.getElementById('w1').value;
+            systemState.rounds[rIdx].w2 = document.getElementById('w2').value;
+            systemState.rounds[rIdx].l1 = document.getElementById('l1').value;
+            systemState.rounds[rIdx].l2 = document.getElementById('l2').value;
+            systemState.rounds[rIdx].currentTurnIdx = 0; // 重設回第一個贏家選擇
+            saveState();
+            
+            const log = document.getElementById('hostLogs');
+            log.innerHTML = `[變更廣播] 第 0${rIdx} 輪名單重組：贏家(${systemState.rounds[rIdx].w1}, ${systemState.rounds[rIdx].w2})，輸家(${systemState.rounds[rIdx].l1}, ${systemState.rounds[rIdx].l2})。手機端控制權已發放給 ${systemState.rounds[rIdx].w1}。` + `<br>` + log.innerHTML;
+            renderHostView();
+        }
+
+        // 控制台邏輯：點擊切換當前選中順位
+        function setTurn(idx) {
+            const rIdx = systemState.currentRound;
+            systemState.rounds[rIdx].currentTurnIdx = idx;
+            saveState();
+            renderHostView();
+        }
+
+        // 控制台邏輯：推進到下一個人
+        function nextTurn() {
+            const rIdx = systemState.currentRound;
+            if (systemState.rounds[rIdx].currentTurnIdx < 3) {
+                systemState.rounds[rIdx].currentTurnIdx++;
+            } else {
+                alert("本輪選擇已全部結束！請點擊上方切換至下一輪。");
+            }
+            saveState();
+            renderHostView();
         }
     </script>
 </body>
