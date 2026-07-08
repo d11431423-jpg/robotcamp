@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>機器人研究社 - 行動主控台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #00ff66;
+            --secondary-color: #00f0ff;
+            --bg-dark: #0a0a0c;
+            --bg-gray: #1a1a1f;
+            --team-color: #ffd700;
+            --text-color: #00ff66;
+            --danger-red: #ff0055;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: var(--bg-dark);
+            color: var(--text-color);
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* ========== CRT 掃描線效果 ========== */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15),
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            z-index: 9999;
+            animation: scanlines 8s linear infinite;
+        }
+
+        @keyframes scanlines {
+            0% {
+                transform: translateY(0);
+            }
+            100% {
+                transform: translateY(10px);
+            }
+        }
+
+        /* ========== 主容器 ========== */
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            padding: 16px;
+            gap: 12px;
+            overflow: hidden;
+        }
+
+        /* ========== 頭部：陣營標題 ========== */
+        .header {
+            text-align: center;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid var(--team-color);
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 255, 102, 0.3), inset 0 0 20px rgba(0, 255, 102, 0.1);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: bold;
+            letter-spacing: 3px;
+            text-shadow: 0 0 10px var(--team-color), 0 0 20px var(--team-color);
+            animation: glitch-text 0.3s ease-in-out;
+        }
+
+        @keyframes glitch-text {
+            0%, 100% {
+                text-shadow: 0 0 10px var(--team-color), 0 0 20px var(--team-color);
+                transform: translate(0, 0);
+            }
+            20% {
+                text-shadow: -2px 0 #ff0055, 2px 0 #00f0ff;
+                transform: translate(-2px, -2px);
+            }
+            40% {
+                text-shadow: 2px 0 #ff0055, -2px 0 #00f0ff;
+                transform: translate(2px, 2px);
+            }
+            60% {
+                text-shadow: -1px 0 #ff0055, 1px 0 #00f0ff;
+                transform: translate(-1px, 1px);
+            }
+            80% {
+                text-shadow: 1px 0 #ff0055, -1px 0 #00f0ff;
+                transform: translate(1px, -1px);
+            }
+        }
+
+        /* ========== 中央面板：數據顯示 ========== */
+        .main-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .stat-card {
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid var(--secondary-color);
+            border-radius: 4px;
+            padding: 12px;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.2), inset 0 0 15px rgba(0, 240, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.4), inset 0 0 25px rgba(0, 240, 255, 0.1);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+            color: var(--secondary-color);
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--team-color);
+            text-shadow: 0 0 10px var(--team-color);
+            margin-bottom: 8px;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 2px;
+        }
+
+        /* ========== 數碼方格能量條 ========== */
+        .energy-bar {
+            display: flex;
+            gap: 3px;
+            height: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid var(--secondary-color);
+            border-radius: 2px;
+            padding: 2px;
+            overflow: hidden;
+        }
+
+        .energy-segment {
+            flex: 1;
+            background: linear-gradient(135deg, var(--team-color), var(--secondary-color));
+            border-radius: 1px;
+            box-shadow: 0 0 8px var(--team-color), inset 0 0 4px rgba(255, 255, 255, 0.2);
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .energy-segment::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                left: -100%;
+            }
+            100% {
+                left: 100%;
+            }
+        }
+
+        .energy-segment.inactive {
+            background: rgba(0, 0, 0, 0.3);
+            box-shadow: 0 0 4px rgba(0, 240, 255, 0.1);
+        }
+
+        /* ========== 警報系統 ========== */
+        .alert-system {
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid var(--secondary-color);
+            border-radius: 4px;
+            padding: 12px;
+            height: 120px;
+            overflow-y: auto;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+            position: relative;
+            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
+        }
+
+        .alert-system.critical {
+            border-color: var(--danger-red);
+            background: rgba(255, 0, 85, 0.1);
+            animation: alert-breathe 0.6s ease-in-out infinite;
+        }
+
+        @keyframes alert-breathe {
+            0%, 100% {
+                box-shadow: 0 0 15px rgba(255, 0, 85, 0.3), inset 0 0 15px rgba(255, 0, 85, 0.05);
+            }
+            50% {
+                box-shadow: 0 0 30px rgba(255, 0, 85, 0.6), inset 0 0 30px rgba(255, 0, 85, 0.15);
+            }
+        }
+
+        .alert-title {
+            font-size: 12px;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+            color: var(--secondary-color);
+            text-transform: uppercase;
+        }
+
+        .alert-log {
+            font-size: 11px;
+            line-height: 1.6;
+            color: var(--text-color);
+            max-height: 80px;
+            overflow-y: auto;
+        }
+
+        .alert-item {
+            margin-bottom: 4px;
+            padding: 4px;
+            border-left: 2px solid var(--team-color);
+            padding-left: 8px;
+            animation: typewriter 0.5s steps(40, end);
+        }
+
+        .alert-item.critical {
+            color: var(--danger-red);
+            border-left-color: var(--danger-red);
+            text-shadow: 0 0 10px var(--danger-red);
+        }
+
+        @keyframes typewriter {
+            from {
+                width: 0;
+                overflow: hidden;
+            }
+            to {
+                width: 100%;
+            }
+        }
+
+        /* ========== 響應式設計 ========== */
+        @media (max-width: 768px) {
+            .container {
+                padding: 12px;
+                gap: 10px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .stat-value {
+                font-size: 24px;
+            }
+
+            .stat-label {
+                font-size: 11px;
+            }
+
+            .alert-system {
+                height: 100px;
+            }
+
+            .alert-log {
+                max-height: 70px;
+            }
+        }
+
+        /* ========== 震動特效 ========== */
+        @keyframes shake {
+            0%, 100% {
+                transform: translate(0, 0);
+            }
+            10% {
+                transform: translate(-2px, -2px);
+            }
+            20% {
+                transform: translate(2px, 2px);
+            }
+            30% {
+                transform: translate(-2px, 2px);
+            }
+            40% {
+                transform: translate(2px, -2px);
+            }
+            50% {
+                transform: translate(-1px, 1px);
+            }
+            60% {
+                transform: translate(1px, -1px);
+            }
+            70% {
+                transform: translate(-1px, -1px);
+            }
+            80% {
+                transform: translate(1px, 1px);
+            }
+            90% {
+                transform: translate(-2px, 0);
+            }
+        }
+
+        .shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        /* ========== 捲軸美化 ========== */
+        .main-panel::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .main-panel::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .main-panel::-webkit-scrollbar-thumb {
+            background: var(--team-color);
+            border-radius: 3px;
+            box-shadow: 0 0 10px var(--team-color);
+        }
+
+        .alert-log::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .alert-log::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .alert-log::-webkit-scrollbar-thumb {
+            background: var(--secondary-color);
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 頭部：陣營標題 -->
+        <div class="header">
+            <h1 id="teamTitle">TEAM ALPHA</h1>
+        </div>
+
+        <!-- 中央面板：數據顯示 -->
+        <div class="main-panel">
+            <!-- 金錢卡片 -->
+            <div class="stat-card">
+                <div class="stat-label">💰 資金</div>
+                <div class="stat-value" id="moneyValue">0</div>
+                <div class="energy-bar" id="moneyBar"></div>
+            </div>
+
+            <!-- 生命值卡片 -->
+            <div class="stat-card">
+                <div class="stat-label">❤️ 生命值</div>
+                <div class="stat-value" id="healthValue">0</div>
+                <div class="energy-bar" id="healthBar"></div>
+            </div>
+
+            <!-- 科技點卡片 -->
+            <div class="stat-card">
+                <div class="stat-label">⚡ 科技點</div>
+                <div class="stat-value" id="techValue">0</div>
+                <div class="energy-bar" id="techBar"></div>
+            </div>
+        </div>
+
+        <!-- 警報系統 -->
+        <div class="alert-system">
+            <div class="alert-title">🚨 中央警報系統</div>
+            <div class="alert-log" id="alertLog">
+                <div class="alert-item">系統初始化完成...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== 配置 ==========
+        const TEAM_CONFIG = {
+            A: { name: '政府高層', color: '#ffd700', title: 'GOVERNMENT COMMAND' },
+            B: { name: '社團科學家', color: '#00b4ff', title: 'SCIENCE DIVISION' },
+            C: { name: '工廠資方', color: '#ff6b9d', title: 'CAPITAL SECTOR' },
+            D: { name: '底層勞工', color: '#ff4444', title: 'LABOR FORCE' }
+        };
+
+        const GAS_URL = 'https://script.google.com/macros/d/YOUR_GAS_DEPLOYMENT_ID/usercontent'; // 請替換為您的 GAS URL
+
+        // ========== 全域變數 ==========
+        let currentTeam = 'A';
+        let currentStats = { money: 0, health: 0, tech: 0 };
+        let previousStats = { money: 0, health: 0, tech: 0 };
+
+        // ========== 初始化 ==========
+        function init() {
+            // 讀取 URL 參數
+            const params = new URLSearchParams(window.location.search);
+            currentTeam = params.get('team') || 'A';
+
+            // 驗證隊伍
+            if (!TEAM_CONFIG[currentTeam]) {
+                currentTeam = 'A';
+            }
+
+            // 套用主題
+            applyTheme();
+
+            // 初始化能量條
+            updateEnergyBars();
+
+            // 啟動 API 輪詢
+            startAPIPolling();
+
+            // 模擬初始數據（測試用）
+            setTimeout(() => {
+                addAlert('✅ 掃碼成功！歡迎進入戰場。');
+            }, 500);
+        }
+
+        // ========== 套用主題 ==========
+        function applyTheme() {
+            const config = TEAM_CONFIG[currentTeam];
+            const root = document.documentElement;
+
+            root.style.setProperty('--team-color', config.color);
+            document.getElementById('teamTitle').textContent = config.title;
+        }
+
+        // ========== 更新能量條 ==========
+        function updateEnergyBars() {
+            const stats = [
+                { value: currentStats.money, maxValue: 100, barId: 'moneyBar' },
+                { value: currentStats.health, maxValue: 100, barId: 'healthBar' },
+                { value: currentStats.tech, maxValue: 100, barId: 'techBar' }
+            ];
+
+            stats.forEach(stat => {
+                const bar = document.getElementById(stat.barId);
+                bar.innerHTML = '';
+
+                const segmentCount = 20;
+                const activeSegments = Math.round((stat.value / stat.maxValue) * segmentCount);
+
+                for (let i = 0; i < segmentCount; i++) {
+                    const segment = document.createElement('div');
+                    segment.className = 'energy-segment';
+
+                    if (i >= activeSegments) {
+                        segment.classList.add('inactive');
+                    }
+
+                    bar.appendChild(segment);
+                }
+            });
+        }
+
+        // ========== 動畫計數器 ==========
+        function animateCounter(elementId, startValue, endValue, duration = 800) {
+            const element = document.getElementById(elementId);
+            const startTime = performance.now();
+
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+
+                const currentValue = Math.floor(startValue + (endValue - startValue) * progress);
+                element.textContent = currentValue;
+
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                } else {
+                    element.textContent = endValue;
+                }
+            }
+
+            requestAnimationFrame(update);
+        }
+
+        // ========== 更新統計數據 ==========
+        function updateStats(newStats) {
+            previousStats = { ...currentStats };
+            currentStats = newStats;
+
+            // 動畫更新數值
+            animateCounter('moneyValue', previousStats.money, currentStats.money);
+            animateCounter('healthValue', previousStats.health, currentStats.health);
+            animateCounter('techValue', previousStats.tech, currentStats.tech);
+
+            // 更新能量條
+            updateEnergyBars();
+
+            // 檢查臨界值
+            if (currentStats.health < 30) {
+                triggerCriticalAlert();
+            }
+        }
+
+        // ========== 觸發臨界警報 ==========
+        function triggerCriticalAlert() {
+            const alertSystem = document.querySelector('.alert-system');
+            alertSystem.classList.add('critical');
+
+            // 3 秒後移除臨界狀態
+            setTimeout(() => {
+                alertSystem.classList.remove('critical');
+            }, 3000);
+
+            // 觸發震動
+            triggerShake();
+        }
+
+        // ========== 觸發震動特效 ==========
+        function triggerShake() {
+            const container = document.querySelector('.container');
+            container.classList.add('shake');
+
+            setTimeout(() => {
+                container.classList.remove('shake');
+            }, 400);
+        }
+
+        // ========== 添加警報 ==========
+        function addAlert(message) {
+            const alertLog = document.getElementById('alertLog');
+            const alertItem = document.createElement('div');
+            alertItem.className = 'alert-item';
+
+            // 判斷是否為危險警報
+            if (message.includes('🚨') || message.includes('⚠️')) {
+                alertItem.classList.add('critical');
+            }
+
+            alertItem.textContent = `[${getTimestamp()}] ${message}`;
+            alertLog.appendChild(alertItem);
+
+            // 自動捲動到最新
+            alertLog.scrollTop = alertLog.scrollHeight;
+
+            // 保持最多 10 條警報
+            while (alertLog.children.length > 10) {
+                alertLog.removeChild(alertLog.firstChild);
+            }
+        }
+
+        // ========== 取得時間戳 ==========
+        function getTimestamp() {
+            const now = new Date();
+            return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+        }
+
+        // ========== API 輪詢 ==========
+        function startAPIPolling() {
+            // 每 3 秒請求一次
+            setInterval(() => {
+                fetchDataFromGAS();
+            }, 3000);
+
+            // 立即請求一次
+            fetchDataFromGAS();
+        }
+
+        // ========== 從 GAS 取得數據 ==========
+        function fetchDataFromGAS() {
+            // 測試模式：使用隨機數據
+            // 實際使用時，請替換為真實的 GAS 請求
+
+            const testData = {
+                money: Math.floor(Math.random() * 100),
+                health: Math.floor(Math.random() * 100),
+                tech: Math.floor(Math.random() * 100),
+                alerts: [
+                    '✅ 資源更新完成',
+                    '⚡ 科技點增加',
+                    '❤️ 生命值恢復'
+                ]
+            };
+
+            // 實際 GAS 請求（取消註釋以使用）
+            /*
+            fetch(GAS_URL + '?team=' + currentTeam)
+                .then(response => response.json())
+                .then(data => {
+                    updateStats({
+                        money: data.money || 0,
+                        health: data.health || 0,
+                        tech: data.tech || 0
+                    });
+
+                    if (data.alerts && data.alerts.length > 0) {
+                        data.alerts.forEach(alert => addAlert(alert));
+                    }
+                })
+                .catch(error => {
+                    console.error('API 請求失敗:', error);
+                    addAlert('⚠️ 無法連接伺服器');
+                });
+            */
+
+            // 測試模式
+            updateStats({
+                money: testData.money,
+                health: testData.health,
+                tech: testData.tech
+            });
+        }
+
+        // ========== 頁面載入完成後初始化 ==========
+        window.addEventListener('load', init);
+
+        // ========== 防止雙擊縮放 ==========
+        document.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+    </script>
+</body>
+</html>
