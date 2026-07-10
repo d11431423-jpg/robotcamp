@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TACTICAL MATRIX SYSTEM</title>
+    <title>TACTICAL MATRIX SYSTEM v2</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', Courier, monospace, "System-UI", sans-serif; }
         body, html { width: 100%; min-height: 100%; background-color: #020608; color: #00f0ff; position: relative; }
@@ -34,13 +34,15 @@
         .top-left-panel { grid-column: 1 / span 2; grid-row: 1; display: flex; align-items: center; justify-content: space-between; }
         .team-title { font-size: 20px; font-weight: 900; letter-spacing: 1px; text-shadow: 0 0 10px currentColor; line-height: 1.3; }
 
-        .mid-left-panel { display: flex; justify-content: space-around; align-items: flex-end; grid-column: 1; grid-row: 2; min-height: 250px; padding: 15px 5px; border: 1px solid rgba(0, 240, 255, 0.15); background: rgba(0,0,0,0.2); }
-        .vertical-bar-container { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; width: 30%; height: 100%; gap: 8px; }
-        .v-bar-val { font-size: 12px; font-weight: bold; font-family: monospace; text-align: center; color: #fff; }
-        .v-bar-outer { width: 24px; flex-grow: 1; min-height: 150px; border: 2px solid rgba(0, 240, 255, 0.4); padding: 2px; background: rgba(0,0,0,0.6); position: relative; display: flex; align-items: flex-end; }
-        .v-bar-inner { width: 100%; background: currentColor; transition: height 0.6s cubic-bezier(0.1, 0.8, 0.3, 1); filter: drop-shadow(0 0 6px currentColor); }
-        .v-bar-grid { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(180deg, transparent 70%, #020608 70%); background-size: 100% 10px; pointer-events: none; }
-        .v-bar-label { font-size: 13px; font-weight: 900; text-shadow: 0 0 8px currentColor; text-align: center; margin-top: 4px; }
+        /* ⭕ 圓形儀表板樣式區 */
+        .mid-left-panel { display: flex; flex-direction: column; justify-content: space-around; align-items: center; grid-column: 1; grid-row: 2; min-height: 270px; padding: 15px 5px; border: 1px solid rgba(0, 240, 255, 0.15); background: rgba(0,0,0,0.2); gap: 10px; }
+        .dial-container { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; gap: 6px; }
+        .dial-svg-wrapper { position: relative; width: 72px; height: 72px; display: flex; align-items: center; justify-content: center; }
+        .dial-svg-wrapper svg { transform: rotate(-90deg); width: 100%; height: 100%; }
+        .dial-bg { fill: none; stroke: rgba(0, 240, 255, 0.08); stroke-width: 5; }
+        .dial-fill { fill: none; stroke-width: 5; stroke-dasharray: 157; transition: stroke-dashoffset 0.5s cubic-bezier(0.1, 0.8, 0.3, 1); stroke-linecap: round; }
+        .dial-text { position: absolute; font-size: 14px; font-weight: bold; font-family: 'Courier New', monospace; color: #ffffff; text-shadow: 0 0 8px rgba(255,255,255,0.6); }
+        .v-bar-label { font-size: 13px; font-weight: 900; text-shadow: 0 0 8px currentColor; text-align: center; margin-top: 2px; }
         
         .bottom-left-panel { grid-column: 1; grid-row: 3; border: 1px solid rgba(0, 240, 255, 0.2); background: rgba(0,0,0,0.3); position: relative; min-height: 60px; }
 
@@ -85,20 +87,14 @@
         }
         .panel-sync-btn:hover { background: #fff; color: #000; box-shadow: 0 0 15px #00ffaa; }
 
-        /* 📡 全域網路燈號樣式 */
         .net-status-badge { font-size: 12px; padding: 4px 8px; background: rgba(0,0,0,0.5); border: 1px solid #00ffaa; color: #00ffaa; font-weight: bold; }
         .net-status-badge.fail { border-color: #ff3333; color: #ff3333; animation: flash 1s infinite; }
 
-        /* RWD Responsive Phone View Layout */
         @media (max-width: 600px) {
             .main-container { padding: 10px; align-items: flex-start; }
-            .hud-screen {
-                display: flex; flex-direction: column; 
-                width: 100%; min-height: auto; height: auto; padding: 15px; gap: 15px;
-            }
+            .hud-screen { display: flex; flex-direction: column; width: 100%; min-height: auto; height: auto; padding: 15px; gap: 15px; }
             .top-left-panel { order: 1; }
-            .mid-left-panel { order: 3; min-height: 18px; padding: 15px 10px; } 
-            .v-bar-outer { min-height: 120px; }
+            .mid-left-panel { order: 3; min-height: auto; padding: 12px; flex-direction: row; gap: 15px; } 
             .center-core { order: 2; padding: 10px 0; } 
             .radar-group { max-width: 120px; }
             .top-right-panel { order: 4; clip-path: none; min-height: auto; } 
@@ -148,10 +144,10 @@
 
         .theme-A { --color: #ffb700; } .theme-B { --color: #00f0ff; } .theme-C { --color: #d400ff; } .theme-D { --color: #ff3333; } 
         .theme-A, .theme-B, .theme-C, .theme-D { color: var(--color); border-color: var(--color); }
-        .theme-A .hud-screen, .theme-A .v-bar-outer { border-color: rgba(255,183,0,0.5); }
-        .theme-B .hud-screen, .theme-B .v-bar-outer { border-color: rgba(0,240,255,0.5); }
-        .theme-C .hud-screen, .theme-C .v-bar-outer { border-color: rgba(212,0,255,0.5); }
-        .theme-D .hud-screen, .theme-D .v-bar-outer { border-color: rgba(255,51,51,0.5); }
+        .theme-A .hud-screen { border-color: rgba(255,183,0,0.5); }
+        .theme-B .hud-screen { border-color: rgba(0,240,255,0.5); }
+        .theme-C .hud-screen { border-color: rgba(212,0,255,0.5); }
+        .theme-D .hud-screen { border-color: rgba(255,51,51,0.5); }
 
         @keyframes rotateRadar { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes flash { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
@@ -164,15 +160,15 @@
     </div>
 
     <script>
-        const CHANNEL_ID = "matrix_tactical_sync_core_9955";
+        // 🔒 使用專屬防衝突頻道名稱
+        const CHANNEL_ID = "matrix_tactical_v2_dynamic_sync_2026";
         const API_URL = `https://ntfy.sh/${CHANNEL_ID}`;
 
-        // 陣列編號定義：A=政府高層, B=社團科學家, C=工廠資方(資本), D=底層勞工
         const initialTeamsData = {
-            A: { name: "🏛️ 政府高層 SYSTEM", funds: 50, stability: 50, tech: 50, textName: "政府高層" }, 
-            B: { name: "🧪 社團科學家 SYSTEM", funds: 50, stability: 50, tech: 50, textName: "社團科學家" }, 
-            C: { name: "🏢 工廠資方 SYSTEM", funds: 50, stability: 50, tech: 50, textName: "工廠資方" }, 
-            D: { name: "🛠️ 底層勞工 SYSTEM", funds: 50, stability: 50, tech: 50, textName: "底層勞工" }  
+            A: { name: "🏛️ 政府高層 SYSTEM", funds: 30, stability: 70, tech: 20, textName: "政府高層" }, 
+            B: { name: "🧪 社團科學家 SYSTEM", funds: 20, stability: 30, tech: 70, textName: "社團科學家" }, 
+            C: { name: "🏢 工廠資方 SYSTEM", funds: 70, stability: 30, tech: 20, textName: "工廠資方" }, 
+            D: { name: "🛠️ 底層勞工 SYSTEM", funds: 40, stability: 40, tech: 40, textName: "底層勞工" }  
         };
 
         const initialSystemState = {
@@ -188,10 +184,12 @@
             }
         };
 
-        // 🌲 核心第一輪數據分支樹 (完美覆蓋所有加減數值與對話文本)
-        const clamp = (val) => Math.min(100, Math.max(0, val));
+        // 安全箝制數值於 0 到 100 之間
+        const clamp = (val) => Math.max(0, Math.min(100, val)); 
+        
         const round1Content = {
             background: "AI 核心過載的瞬間，巨大的能量脈衝導致中央電網瞬間癱瘓，半數區域陷入一片黑暗。殘存的緊急電力所剩無幾，這寶貴的能源究竟該送往何處，考驗著所有人的神經。",
+            background_B: "在全城斷電的混亂中，科學家率先截獲了中央電網的控制權。手握著這座城市僅存的命脈，獨立科學界的抉擇將直接決定未來的秩序與能源流向。",
             0: {
                 choices: {
                     A: {
@@ -208,6 +206,24 @@
                         effect: (state) => {
                             state.teams.A.funds = clamp(state.teams.A.funds + 15);
                             state.teams.B.funds = clamp(state.teams.B.funds - 20); state.teams.B.stability = clamp(state.teams.B.stability - 15);
+                        }
+                    }
+                },
+                B_choices: {
+                    A: {
+                        label: "⚡ 方案甲：獨占能源，啟動量子屏障",
+                        desc: "科學家將剩餘電力全部導入實驗室，啟動量子屏障自保，並加速研發終極武器。",
+                        effect: (state) => {
+                            state.teams.B.tech = clamp(state.teams.B.tech + 20); state.teams.B.stability = clamp(state.teams.B.stability + 10);
+                            state.teams.A.stability = clamp(state.teams.A.stability - 15); state.teams.C.funds = clamp(state.teams.C.funds - 10);
+                        }
+                    },
+                    B: {
+                        label: "⚡ 方案乙：分散電網，開源緊急能源",
+                        desc: "科學家破解中央電網限制，將緊急能源化整為零，開源分配給底層與民間。",
+                        effect: (state) => {
+                            state.teams.B.stability = clamp(state.teams.B.stability + 15); state.teams.D.stability = clamp(state.teams.D.stability + 20);
+                            state.teams.A.funds = clamp(state.teams.A.funds - 20); state.teams.C.funds = clamp(state.teams.C.funds - 15);
                         }
                     }
                 }
@@ -260,7 +276,7 @@
                         D: {
                             A: {
                                 label: "⚡ 方案甲：砸血汗錢在黑市搬回零件淘金",
-                                desc: "勞工決定砸下血汗錢在黑市「撈油水」。把零件和核心代碼搬回貧民窟，點燃民間科技火種。",
+                                desc: "勞工決定砸下血汗錢在黑市「撈油水」。把零件 and 核心代碼搬回貧民窟，點燃民間科技火種。",
                                 effect: (state) => { state.teams.D.tech = clamp(state.teams.D.tech + 20); state.teams.D.funds = clamp(state.teams.D.funds - 10); state.teams.B.funds = clamp(state.teams.B.funds - 10); }
                             },
                             B: {
@@ -268,6 +284,32 @@
                                 desc: "勞工決定不湊這場熱鬧，繼續當個聽話的齒輪，按時上下班並囤積物資。",
                                 effect: (state) => { state.teams.D.funds = clamp(state.teams.D.funds + 15); state.teams.D.stability = clamp(state.teams.D.stability + 5); state.teams.A.funds = clamp(state.teams.A.funds + 10); }
                             }
+                        }
+                    }
+                },
+                "B_A": {
+                    text: "科學家獨占了剩餘能源，啟動了量子屏障。政府軍隊被擋在屏障外，而失去能源的資本家與勞工陷入混亂。",
+                    choices: {
+                        A: {
+                            A: { label: "⚡ 方案甲：發動電磁脈衝強行攻堅", desc: "政府軍隊發動電磁脈衝強行攻堅屏障，試圖奪回控制權。", effect: (state) => { state.teams.A.stability += 10; state.teams.B.tech -= 15; } },
+                            B: { label: "⚡ 方案乙：切斷外部物資進行圍城", desc: "政府選擇切斷所有外部物資供應，對實驗室進行長期圍城。", effect: (state) => { state.teams.A.funds -= 10; state.teams.B.stability -= 15; } }
+                        },
+                        C: {
+                            A: { label: "⚡ 方案甲：砸重金收買內部人員", desc: "資本砸下重金收買實驗室內部的研究員，試圖從內部瓦解屏障。", effect: (state) => { state.teams.C.funds -= 20; state.teams.B.tech -= 10; state.teams.C.tech += 15; } },
+                            B: { label: "⚡ 方案乙：投資黑市武裝坐收漁翁之利", desc: "資本投資黑市武裝，打算等政府與科學家兩敗俱傷時介入。", effect: (state) => { state.teams.C.funds -= 15; state.teams.C.stability += 20; state.teams.A.stability -= 10; } }
+                        }
+                    }
+                },
+                "B_B": {
+                    text: "科學家將能源開源，底層街區重新亮起燈光。然而這激怒了急需能源維持統治的政府，以及企圖壟斷市場的資本家。",
+                    choices: {
+                        A: {
+                            A: { label: "⚡ 方案甲：宣布開源非法，派兵鎮壓", desc: "政府宣布開源能源非法，派遣武裝部隊鎮壓底層街區。", effect: (state) => { state.teams.A.stability += 15; state.teams.D.stability -= 20; } },
+                            B: { label: "⚡ 方案乙：啟動黑雷達追蹤科學家", desc: "政府啟動備用的黑雷達系統，全力追蹤並逮捕釋放能源的科學家。", effect: (state) => { state.teams.A.funds -= 10; state.teams.A.tech += 15; state.teams.B.stability -= 15; } }
+                        },
+                        C: {
+                            A: { label: "⚡ 方案甲：拋售資產，轉型地下錢莊", desc: "資本看準底層擁有能源但缺乏物資，轉型地下錢莊高利貸吸血。", effect: (state) => { state.teams.C.funds += 20; state.teams.D.funds -= 15; } },
+                            B: { label: "⚡ 方案乙：竊取代碼重新打包販售", desc: "資本竊取了科學家的開源代碼，重新打包成商業服務販售給中產階級。", effect: (state) => { state.teams.C.tech += 15; state.teams.C.funds += 10; state.teams.B.tech -= 10; } }
                         }
                     }
                 }
@@ -304,7 +346,7 @@
                     }
                 },
                 "A_D_A": {
-                    text: "政府的軍事戒嚴大獲成功，在勞工的順從配合下，統治威權達到頂峰。此時，政府調轉槍頭，開始全面清算獨立的科研機構，被切斷實驗室能源的科學家即將迎來他們的命運抉擇。",
+                    text: "政府的軍事戒嚴大獲成功，在勞工的順聽配合下，統治威權達到頂峰。此時，政府調轉槍頭，開始全面清算獨立的科研機構，被切斷實驗室能源的科學家即將迎來他們的命運抉擇。",
                     choices: {
                         A: {
                             label: "⚡ 方案甲：敞開實驗室大門，併入國家科研體制",
@@ -391,6 +433,13 @@
                             desc: "科學家在被捕前釋放毀滅性數據病毒，這場技術自爆瞬間癱瘓了城市的基礎設施。",
                             effect: (state) => { state.teams.B.tech = clamp(state.teams.B.tech + 10); state.teams.B.stability = clamp(state.teams.B.stability - 10); state.teams.A.tech = clamp(state.teams.A.tech - 25); state.teams.D.tech = clamp(state.teams.D.tech - 10); state.teams.C.tech = clamp(state.teams.C.tech - 5); }
                         }
+                    }
+                },
+                "B_A_A": {
+                    text: "政府軍隊強行攻破了實驗室外圍防線，雙方在數據中心展開激戰。與此同時，其它陣營正虎視眈眈地等待結果。",
+                    choices: {
+                        C: { label: "⚡ 系統預設：觀望", desc: "在未列舉分支中保持中立。", effect: () => {} },
+                        D: { label: "⚡ 系統預設：觀望", desc: "在未列舉分支中保持中立。", effect: () => {} }
                     }
                 }
             },
@@ -671,7 +720,8 @@
                     const packet = JSON.parse(event.data);
                     if (packet.event === 'message' && packet.message) {
                         const incomingState = JSON.parse(packet.message);
-                        if (incomingState && typeof incomingState.version === 'number') {
+                        // 🛡️ 數據完整性防禦驗證
+                        if (incomingState && incomingState.teams && incomingState.rounds && typeof incomingState.version === 'number') {
                             if (incomingState.version > systemState.version) {
                                 systemState = incomingState;
                                 executeRender();
@@ -698,7 +748,8 @@
                                 const packet = JSON.parse(line);
                                 if (packet.event === 'message' && packet.message) {
                                     const state = JSON.parse(packet.message);
-                                    if (state && (!latest || state.version > latest.version)) {
+                                    // 🛡️ 數據完整性防禦驗證
+                                    if (state && state.teams && state.rounds && (!latest || state.version > latest.version)) {
                                         latest = state;
                                     }
                                 }
@@ -776,7 +827,6 @@
             startSSESync();
         })();
 
-        // 🎮 渲染隊伍玩家畫面
         function renderTeamView() {
             const data = systemState.teams[teamKey] || initialTeamsData[teamKey];
             const rIdx = systemState.currentRound || 1;
@@ -785,12 +835,16 @@
             let identityText = "";
             let statusText = "";
             let canAction = false;
-            let btnALabel = "⚡ 方案甲：因果建構";
-            let btnBLabel = "⚡ 方案乙：逆流破壞";
+            let btnALabel = "⚡ 方案甲：維持現狀 (系統預設)";
+            let btnBLabel = "⚡ 方案乙：激進突破 (系統預設)";
 
             if (rData.status === '闖關中') {
                 identityText = "<span style='color:#00ffaa'>【🎮 關卡挑戰階段】</span>";
-                let bgText = (rIdx === 1) ? round1Content.background : "📊 正在進行關卡闖關！請全力在關卡中取得優勢。";
+                let bgText = "📊 正在進行關卡闖關！請全力在關卡中取得優勢。";
+                if (rIdx === 1) {
+                    const firstTeam = rData.w1;
+                    bgText = firstTeam === 'B' ? round1Content.background_B : round1Content.background;
+                }
                 statusText = `<div style="text-align:left; background:rgba(0,0,0,0.4); padding:10px; border-left:3px solid #00ffaa; margin-bottom:12px;">${bgText}</div>📢 等待主持人結算並廣播本輪順位...`;
                 canAction = false;
             } else {
@@ -804,6 +858,7 @@
                 } else {
                     const activeTeamNow = turnOrder[rData.currentTurnIdx];
                     const activeTeamName = systemState.teams[activeTeamNow]?.textName || "";
+                    const firstTeam = turnOrder[0];
                     
                     if (teamKey === rData.w1) identityText = "<span style='color:#ffb700'>【👑 第一順位】</span>";
                     else if (teamKey === rData.w2) identityText = "<span style='color:#00ffaa'>【✨ 第二順位】</span>";
@@ -811,36 +866,41 @@
                     else if (teamKey === rData.l2) identityText = "<span style='color:#ff3333'>【🚨 第四順位】</span>";
 
                     let currentIntro = `正在等待 [ ${activeTeamName} ] 進行決策選擇。`;
+                    let choiceData = null;
                     
-                    // 🌳 依據決策歷史路徑解析當前應顯示的劇本文本與按鈕
                     if (rIdx === 1) {
                         if (rData.currentTurnIdx === 0) {
-                            currentIntro = round1Content.background;
-                            btnALabel = round1Content[0].choices.A.label;
-                            btnBLabel = round1Content[0].choices.B.label;
+                            currentIntro = firstTeam === 'B' ? round1Content.background_B : round1Content.background;
+                            choiceData = firstTeam === 'B' ? round1Content[0].B_choices : round1Content[0].choices;
                         } else if (rData.currentTurnIdx === 1) {
-                            const govChoice = rData.history[0] || 'A';
-                            currentIntro = round1Content[1][govChoice]?.text || "";
-                            btnALabel = round1Content[1][govChoice]?.choices[activeTeamNow]?.A?.label || "⚡ 方案甲";
-                            btnBLabel = round1Content[1][govChoice]?.choices[activeTeamNow]?.B?.label || "⚡ 方案乙";
+                            const firstChoice = rData.history[0] || 'A';
+                            const key = firstTeam === 'B' ? `B_${firstChoice}` : firstChoice;
+                            const node = round1Content[1][key];
+                            currentIntro = node?.text || `[系統] 局勢變更：前方進入未知的量子分歧點...`;
+                            choiceData = node?.choices?.[activeTeamNow] || node?.choices;
                         } else if (rData.currentTurnIdx === 2) {
-                            const govChoice = rData.history[0] || 'A';
+                            const firstChoice = rData.history[0] || 'A';
                             const secFaction = turnOrder[1];
                             const secChoice = rData.history[1] || 'A';
-                            const key = `${govChoice}_${secFaction}_${secChoice}`;
-                            currentIntro = round1Content[2][key]?.text || "";
-                            btnALabel = round1Content[2][key]?.choices?.A?.label || "⚡ 方案甲";
-                            btnBLabel = round1Content[2][key]?.choices?.B?.label || "⚡ 方案乙";
+                            let key = `${firstChoice}_${secFaction}_${secChoice}`;
+                            if (firstTeam === 'B') key = `B_${key}`;
+                            const node = round1Content[2][key];
+                            currentIntro = node?.text || `[系統] 局勢變更：前方進入未知的量子分歧點...`;
+                            choiceData = node?.choices;
                         } else if (rData.currentTurnIdx === 3) {
-                            const govChoice = rData.history[0] || 'A';
+                            const firstChoice = rData.history[0] || 'A';
                             const secFaction = turnOrder[1];
                             const secChoice = rData.history[1] || 'A';
-                            const sciChoice = rData.history[2] || 'A';
-                            const key = `${govChoice}_${secFaction}_${secChoice}_${sciChoice}`;
-                            currentIntro = round1Content[3][key]?.text || "";
-                            btnALabel = round1Content[3][key]?.choices?.A?.label || "⚡ 方案甲";
-                            btnBLabel = round1Content[3][key]?.choices?.B?.label || "⚡ 方案乙";
+                            const thirdChoice = rData.history[2] || 'A';
+                            let key = `${firstChoice}_${secFaction}_${secChoice}_${thirdChoice}`;
+                            if (firstTeam === 'B') key = `B_${key}`;
+                            const node = round1Content[3][key];
+                            currentIntro = node?.text || `[系統] 局勢變更：前方進入未知的量子分歧點...`;
+                            choiceData = node?.choices;
                         }
+
+                        btnALabel = choiceData?.A?.label || "⚡ 方案甲：維持現狀 (系統預設行動)";
+                        btnBLabel = choiceData?.B?.label || "⚡ 方案乙：激進突破 (系統預設行動)";
                     }
 
                     if (teamKey === activeTeamNow) {
@@ -853,6 +913,10 @@
                 }
             }
 
+            const fP = Math.max(0, Math.min(100, data.funds));
+            const sP = Math.max(0, Math.min(100, data.stability));
+            const tP = Math.max(0, Math.min(100, data.tech));
+
             mainView.innerHTML = `
                 <div class="hud-screen" id="hudScreen">
                     <svg class="hud-border-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -862,23 +926,40 @@
                         <div class="team-title">${data.name}</div>
                         <div id="netIndicator" class="net-status-badge">${cloudOnline ? '🌐 雲端連線正常':'⚠️ 雲端斷線/更新中'}</div>
                     </div>
+                    
                     <div class="mid-left-panel">
-                        <div class="vertical-bar-container">
-                            <span class="v-bar-val">${data.funds}</span>
-                            <div class="v-bar-outer"><div class="v-bar-inner" style="height: ${data.funds}%;"></div><div class="v-bar-grid"></div></div>
+                        <div class="dial-container">
+                            <div class="dial-svg-wrapper">
+                                <svg viewBox="0 0 60 60">
+                                    <circle class="dial-bg" cx="30" cy="30" r="25"></circle>
+                                    <circle class="dial-fill" cx="30" cy="30" r="25" style="stroke-dashoffset: ${157 - (157 * fP) / 100}; stroke: #00f0ff; filter: drop-shadow(0 0 5px #00f0ff);"></circle>
+                                </svg>
+                                <div class="dial-text">${data.funds}%</div>
+                            </div>
                             <span class="v-bar-label">資產</span>
                         </div>
-                        <div class="vertical-bar-container" style="color: #ff7300;">
-                            <span class="v-bar-val">${data.stability}</span>
-                            <div class="v-bar-outer"><div class="v-bar-inner" style="height: ${data.stability}%;"></div><div class="v-bar-grid"></div></div>
+                        <div class="dial-container" style="color: #ff7300;">
+                            <div class="dial-svg-wrapper">
+                                <svg viewBox="0 0 60 60">
+                                    <circle class="dial-bg" cx="30" cy="30" r="25" style="stroke: rgba(255,115,0,0.08);"></circle>
+                                    <circle class="dial-fill" cx="30" cy="30" r="25" style="stroke-dashoffset: ${157 - (157 * sP) / 100}; stroke: #ff7300; filter: drop-shadow(0 0 5px #ff7300);"></circle>
+                                </svg>
+                                <div class="dial-text">${data.stability}%</div>
+                            </div>
                             <span class="v-bar-label">生命</span>
                         </div>
-                        <div class="vertical-bar-container" style="color: #00ffaa;">
-                            <span class="v-bar-val">${data.tech}</span>
-                            <div class="v-bar-outer"><div class="v-bar-inner" style="height: ${data.tech}%;"></div><div class="v-bar-grid"></div></div>
+                        <div class="dial-container" style="color: #00ffaa;">
+                            <div class="dial-svg-wrapper">
+                                <svg viewBox="0 0 60 60">
+                                    <circle class="dial-bg" cx="30" cy="30" r="25" style="stroke: rgba(0,255,170,0.08);"></circle>
+                                    <circle class="dial-fill" cx="30" cy="30" r="25" style="stroke-dashoffset: ${157 - (157 * tP) / 100}; stroke: #00ffaa; filter: drop-shadow(0 0 5px #00ffaa);"></circle>
+                                </svg>
+                                <div class="dial-text">${data.tech}%</div>
+                            </div>
                             <span class="v-bar-label">科技</span>
                         </div>
                     </div>
+
                     <div class="bottom-left-panel">
                         <svg width="100%" height="100%" style="stroke:currentColor; fill:none; opacity:0.3; stroke-width:0.5;">
                             <circle cx="50" cy="50" r="30" stroke-dasharray="4 4"/>
@@ -910,7 +991,6 @@
             `;
         }
 
-        // 🧠 計算選擇結果並同步
         function executeMatrixChoice(choiceType) {
             mutateAndSyncState(() => {
                 const rIdx = systemState.currentRound;
@@ -919,50 +999,50 @@
 
                 const turnOrder = [rData.w1, rData.w2, rData.l1, rData.l2];
                 const activeTeam = turnOrder[rData.currentTurnIdx];
+                const firstTeam = turnOrder[0];
                 let logDesc = "";
 
                 if (rIdx === 1) {
                     let choiceObj = null;
                     if (rData.currentTurnIdx === 0) {
-                        choiceObj = round1Content[0].choices[choiceType];
+                        choiceObj = firstTeam === 'B' ? round1Content[0].B_choices?.[choiceType] : round1Content[0].choices?.[choiceType];
                     } else if (rData.currentTurnIdx === 1) {
-                        const govChoice = rData.history[0] || 'A';
-                        choiceObj = round1Content[1][govChoice]?.choices[activeTeam]?.[choiceType];
+                        const firstChoice = rData.history[0] || 'A';
+                        const key = firstTeam === 'B' ? `B_${firstChoice}` : firstChoice;
+                        choiceObj = round1Content[1][key]?.choices?.[activeTeam]?.[choiceType] || round1Content[1][key]?.choices?.[choiceType];
                     } else if (rData.currentTurnIdx === 2) {
-                        const govChoice = rData.history[0] || 'A';
+                        const firstChoice = rData.history[0] || 'A';
                         const secFaction = turnOrder[1];
                         const secChoice = rData.history[1] || 'A';
-                        const key = `${govChoice}_${secFaction}_${secChoice}`;
-                        choiceObj = round1Content[2][key]?.choices[choiceType];
+                        let key = `${firstChoice}_${secFaction}_${secChoice}`;
+                        if (firstTeam === 'B') key = `B_${key}`;
+                        choiceObj = round1Content[2][key]?.choices?.[choiceType];
                     } else if (rData.currentTurnIdx === 3) {
-                        const govChoice = rData.history[0] || 'A';
+                        const firstChoice = rData.history[0] || 'A';
                         const secFaction = turnOrder[1];
                         const secChoice = rData.history[1] || 'A';
                         const sciChoice = rData.history[2] || 'A';
-                        const key = `${govChoice}_${secFaction}_${secChoice}_${sciChoice}`;
-                        choiceObj = round1Content[3][key]?.choices[choiceType];
+                        let key = `${firstChoice}_${secFaction}_${secChoice}_${sciChoice}`;
+                        if (firstTeam === 'B') key = `B_${key}`;
+                        choiceObj = round1Content[3][key]?.choices?.[choiceType];
                     }
 
                     if (choiceObj) {
-                        choiceObj.effect(systemState);
-                        rData.history.push(choiceType);
+                        if(typeof choiceObj.effect === 'function') choiceObj.effect(systemState);
                         logDesc = `【${systemState.teams[activeTeam].textName}】選${choiceType}。${choiceObj.desc}`;
                     } else {
-                        logDesc = `未定義之分支決策路徑。`;
+                        // 當前路徑未建檔的預設變更防呆
+                        logDesc = `【${systemState.teams[activeTeam].textName}】選${choiceType} (系統預設動作，無額外加減成)。`;
                     }
+                    rData.history.push(choiceType);
                 } else {
-                    // 非第一輪的默認兜底兜底算法
+                    // 🛡️ 修正變數指向錯誤缺陷
                     if (activeTeam === 'A') {
-                        if (choiceType === 'A') {
-                            systemState.teams.A.stability = clamp(systemState.teams.A.stability + 15);
-                            logDesc = "【政府高層】選擇方案甲。";
-                        } else {
-                            systemState.teams.A.funds = clamp(systemState.teams.A.funds + 20);
-                            logDesc = "【政府高層】選擇方案乙。";
-                        }
+                        if (choiceType === 'A') { systemState.teams.A.stability = clamp(systemState.teams.A.stability + 15); logDesc = "【政府高層】選擇方案甲。"; } 
+                        else { systemState.teams.A.funds = clamp(systemState.teams.A.funds + 20); logDesc = "【政府高層】選擇方案乙。"; }
                     } else if (activeTeam === 'B') {
                         if (choiceType === 'A') { systemState.teams.B.tech = clamp(systemState.teams.B.tech + 20); logDesc = "【社團科學家】選擇方案甲。"; }
-                        else { systemState.teams.B.stability = clamp(state.teams.B.stability + 20); logDesc = "【社團科學家】選擇方案乙。"; }
+                        else { systemState.teams.B.stability = clamp(systemState.teams.B.stability + 20); logDesc = "【社團科學家】選擇方案乙。"; }
                     } else if (activeTeam === 'C') {
                         if (choiceType === 'A') { systemState.teams.C.funds = clamp(systemState.teams.C.funds + 20); logDesc = "【工廠資方】選擇方案甲。"; }
                         else { systemState.teams.C.tech = clamp(systemState.teams.C.tech + 20); logDesc = "【工廠資方】選擇方案乙。"; }
@@ -978,7 +1058,6 @@
             });
         }
 
-        // 🏛️ 渲染後台主控畫面
         function renderHostView() {
             const rIdx = systemState.currentRound || 1;
             const rData = systemState.rounds[rIdx];
@@ -991,7 +1070,7 @@
                 <div class="host-screen">
                     <div class="host-top-bar">
                         <div class="host-header">🌌 量子核心主控台 
-                            <span class="sync-indicator">📡 劇本動態分歧同步版 (v${systemState.version || 0})</span>
+                            <span class="sync-indicator">📡 劇本分歧同步版 (v${systemState.version || 0})</span>
                             <span id="netIndicator" class="net-status-badge" style="margin-left:15px;">${cloudOnline ? '🌐 雲端連線正常':'⚠️ 雲端斷線/更新中'}</span>
                         </div>
                         <div style="display:flex; gap:10px;">
@@ -1126,19 +1205,16 @@
                     if (!systemState.rounds[rIdx].history) systemState.rounds[rIdx].history = [];
                     systemState.rounds[rIdx].history.push("SKIP");
                     systemState.rounds[rIdx].currentTurnIdx++;
-                    systemState.logs.unshift(`[管理介入] 主持人手動跳過並推進了目前順位。`);
+                    systemState.logs.unshift(`[系統防禦] 管理員已強制切換決策分支。`);
                 }
             });
         }
-
+        
         function resetSystem() {
-            if(confirm("🚨 確定要將雲端系統全域重置為預設狀態嗎？")) {
+            if(confirm("確定要重置所有數據嗎？")) {
                 mutateAndSyncState(() => {
-                    const freshState = JSON.parse(JSON.stringify(initialSystemState));
-                    systemState.currentRound = freshState.currentRound;
-                    systemState.teams = freshState.teams;
-                    systemState.rounds = freshState.rounds;
-                    systemState.logs = ["[系統重置] 全域廣播同步核心重置完成。數據已初始化。"];
+                    systemState = JSON.parse(JSON.stringify(initialSystemState));
+                    systemState.logs.unshift("[系統重置] 宇宙線崩塌重構完畢。");
                 });
             }
         }
