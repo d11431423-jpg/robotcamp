@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TACTICAL MATRIX SYSTEM v2</title>
+    <title>TACTICAL MATRIX SYSTEM</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', Courier, monospace, "System-UI", sans-serif; }
         body, html { width: 100%; min-height: 100%; background-color: #020608; color: #00f0ff; position: relative; }
@@ -34,15 +34,13 @@
         .top-left-panel { grid-column: 1 / span 2; grid-row: 1; display: flex; align-items: center; justify-content: space-between; }
         .team-title { font-size: 20px; font-weight: 900; letter-spacing: 1px; text-shadow: 0 0 10px currentColor; line-height: 1.3; }
 
-        /* ⭕ 圓形儀表板樣式區 */
-        .mid-left-panel { display: flex; flex-direction: column; justify-content: space-around; align-items: center; grid-column: 1; grid-row: 2; min-height: 270px; padding: 15px 5px; border: 1px solid rgba(0, 240, 255, 0.15); background: rgba(0,0,0,0.2); gap: 10px; }
-        .dial-container { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; gap: 6px; }
-        .dial-svg-wrapper { position: relative; width: 72px; height: 72px; display: flex; align-items: center; justify-content: center; }
-        .dial-svg-wrapper svg { transform: rotate(-90deg); width: 100%; height: 100%; }
-        .dial-bg { fill: none; stroke: rgba(0, 240, 255, 0.08); stroke-width: 5; }
-        .dial-fill { fill: none; stroke-width: 5; stroke-dasharray: 157; transition: stroke-dashoffset 0.5s cubic-bezier(0.1, 0.8, 0.3, 1); stroke-linecap: round; }
-        .dial-text { position: absolute; font-size: 14px; font-weight: bold; font-family: 'Courier New', monospace; color: #ffffff; text-shadow: 0 0 8px rgba(255,255,255,0.6); }
-        .v-bar-label { font-size: 13px; font-weight: 900; text-shadow: 0 0 8px currentColor; text-align: center; margin-top: 2px; }
+        .mid-left-panel { display: flex; justify-content: space-around; align-items: flex-end; grid-column: 1; grid-row: 2; min-height: 250px; padding: 15px 5px; border: 1px solid rgba(0, 240, 255, 0.15); background: rgba(0,0,0,0.2); }
+        .vertical-bar-container { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; width: 30%; height: 100%; gap: 8px; }
+        .v-bar-val { font-size: 12px; font-weight: bold; font-family: monospace; text-align: center; color: #fff; }
+        .v-bar-outer { width: 24px; flex-grow: 1; min-height: 150px; border: 2px solid rgba(0, 240, 255, 0.4); padding: 2px; background: rgba(0,0,0,0.6); position: relative; display: flex; align-items: flex-end; }
+        .v-bar-inner { width: 100%; background: currentColor; transition: height 0.6s cubic-bezier(0.1, 0.8, 0.3, 1); filter: drop-shadow(0 0 6px currentColor); }
+        .v-bar-grid { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(180deg, transparent 70%, #020608 70%); background-size: 100% 10px; pointer-events: none; }
+        .v-bar-label { font-size: 13px; font-weight: 900; text-shadow: 0 0 8px currentColor; text-align: center; margin-top: 4px; }
         
         .bottom-left-panel { grid-column: 1; grid-row: 3; border: 1px solid rgba(0, 240, 255, 0.2); background: rgba(0,0,0,0.3); position: relative; min-height: 60px; }
 
@@ -87,14 +85,20 @@
         }
         .panel-sync-btn:hover { background: #fff; color: #000; box-shadow: 0 0 15px #00ffaa; }
 
+        /* 📡 全域網路燈號樣式 */
         .net-status-badge { font-size: 12px; padding: 4px 8px; background: rgba(0,0,0,0.5); border: 1px solid #00ffaa; color: #00ffaa; font-weight: bold; }
         .net-status-badge.fail { border-color: #ff3333; color: #ff3333; animation: flash 1s infinite; }
 
+        /* RWD Responsive Phone View Layout */
         @media (max-width: 600px) {
             .main-container { padding: 10px; align-items: flex-start; }
-            .hud-screen { display: flex; flex-direction: column; width: 100%; min-height: auto; height: auto; padding: 15px; gap: 15px; }
+            .hud-screen {
+                display: flex; flex-direction: column; 
+                width: 100%; min-height: auto; height: auto; padding: 15px; gap: 15px;
+            }
             .top-left-panel { order: 1; }
-            .mid-left-panel { order: 3; min-height: auto; padding: 12px; flex-direction: row; gap: 15px; } 
+            .mid-left-panel { order: 3; min-height: 18px; padding: 15px 10px; } 
+            .v-bar-outer { min-height: 120px; }
             .center-core { order: 2; padding: 10px 0; } 
             .radar-group { max-width: 120px; }
             .top-right-panel { order: 4; clip-path: none; min-height: auto; } 
@@ -144,10 +148,10 @@
 
         .theme-A { --color: #ffb700; } .theme-B { --color: #00f0ff; } .theme-C { --color: #d400ff; } .theme-D { --color: #ff3333; } 
         .theme-A, .theme-B, .theme-C, .theme-D { color: var(--color); border-color: var(--color); }
-        .theme-A .hud-screen { border-color: rgba(255,183,0,0.5); }
-        .theme-B .hud-screen { border-color: rgba(0,240,255,0.5); }
-        .theme-C .hud-screen { border-color: rgba(212,0,255,0.5); }
-        .theme-D .hud-screen { border-color: rgba(255,51,51,0.5); }
+        .theme-A .hud-screen, .theme-A .v-bar-outer { border-color: rgba(255,183,0,0.5); }
+        .theme-B .hud-screen, .theme-B .v-bar-outer { border-color: rgba(0,240,255,0.5); }
+        .theme-C .hud-screen, .theme-C .v-bar-outer { border-color: rgba(212,0,255,0.5); }
+        .theme-D .hud-screen, .theme-D .v-bar-outer { border-color: rgba(255,51,51,0.5); }
 
         @keyframes rotateRadar { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes flash { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
@@ -160,15 +164,15 @@
     </div>
 
     <script>
-        // 🔒 使用專屬防衝突頻道名稱
-        const CHANNEL_ID = "matrix_tactical_v2_dynamic_sync_2026";
+        const CHANNEL_ID = "matrix_tactical_sync_core_9955";
         const API_URL = `https://ntfy.sh/${CHANNEL_ID}`;
 
+        // 陣列編號定義：A=政府高層, B=社團科學家, C=工廠資方(資本), D=底層勞工
         const initialTeamsData = {
-            A: { name: "🏛️ 政府高層 SYSTEM", funds: 30, stability: 70, tech: 20, textName: "政府高層" }, 
-            B: { name: "🧪 社團科學家 SYSTEM", funds: 20, stability: 30, tech: 70, textName: "社團科學家" }, 
-            C: { name: "🏢 工廠資方 SYSTEM", funds: 70, stability: 30, tech: 20, textName: "工廠資方" }, 
-            D: { name: "🛠️ 底層勞工 SYSTEM", funds: 40, stability: 40, tech: 40, textName: "底層勞工" }  
+            A: { name: "🏛️ 政府高層 SYSTEM", funds: 50, stability: 50, tech: 50, textName: "政府高層" }, 
+            B: { name: "🧪 社團科學家 SYSTEM", funds: 50, stability: 50, tech: 50, textName: "社團科學家" }, 
+            C: { name: "🏢 工廠資方 SYSTEM", funds: 50, stability: 50, tech: 50, textName: "工廠資方" }, 
+            D: { name: "🛠️ 底層勞工 SYSTEM", funds: 50, stability: 50, tech: 50, textName: "底層勞工" }  
         };
 
         const initialSystemState = {
@@ -184,8 +188,8 @@
             }
         };
 
-        const clamp = (val) => val; 
-        
+        // 🌲 核心第一輪數據分支樹 (完美覆蓋所有加減數值與對話文本)
+        const clamp = (val) => Math.min(100, Math.max(0, val));
         const round1Content = {
             background: "AI 核心過載的瞬間，巨大的能量脈衝導致中央電網瞬間癱瘓，半數區域陷入一片黑暗。殘存的緊急電力所剩無幾，這寶貴的能源究竟該送往何處，考驗著所有人的神經。",
             0: {
@@ -256,7 +260,7 @@
                         D: {
                             A: {
                                 label: "⚡ 方案甲：砸血汗錢在黑市搬回零件淘金",
-                                desc: "勞工決定砸下血汗錢在黑市「撈油水」。把零件 and 核心代碼搬回貧民窟，點燃民間科技火種。",
+                                desc: "勞工決定砸下血汗錢在黑市「撈油水」。把零件和核心代碼搬回貧民窟，點燃民間科技火種。",
                                 effect: (state) => { state.teams.D.tech = clamp(state.teams.D.tech + 20); state.teams.D.funds = clamp(state.teams.D.funds - 10); state.teams.B.funds = clamp(state.teams.B.funds - 10); }
                             },
                             B: {
@@ -300,7 +304,7 @@
                     }
                 },
                 "A_D_A": {
-                    text: "政府的軍事戒嚴大獲成功，在勞工的順聽配合下，統治威權達到頂峰。此時，政府調轉槍頭，開始全面清算獨立的科研機構，被切斷實驗室能源的科學家即將迎來他們的命運抉擇。",
+                    text: "政府的軍事戒嚴大獲成功，在勞工的順從配合下，統治威權達到頂峰。此時，政府調轉槍頭，開始全面清算獨立的科研機構，被切斷實驗室能源的科學家即將迎來他們的命運抉擇。",
                     choices: {
                         A: {
                             label: "⚡ 方案甲：敞開實驗室大門，併入國家科研體制",
@@ -667,8 +671,7 @@
                     const packet = JSON.parse(event.data);
                     if (packet.event === 'message' && packet.message) {
                         const incomingState = JSON.parse(packet.message);
-                        // 🛡️ 數據完整性防禦驗證
-                        if (incomingState && incomingState.teams && incomingState.rounds && typeof incomingState.version === 'number') {
+                        if (incomingState && typeof incomingState.version === 'number') {
                             if (incomingState.version > systemState.version) {
                                 systemState = incomingState;
                                 executeRender();
@@ -695,8 +698,7 @@
                                 const packet = JSON.parse(line);
                                 if (packet.event === 'message' && packet.message) {
                                     const state = JSON.parse(packet.message);
-                                    // 🛡️ 數據完整性防禦驗證
-                                    if (state && state.teams && state.rounds && (!latest || state.version > latest.version)) {
+                                    if (state && (!latest || state.version > latest.version)) {
                                         latest = state;
                                     }
                                 }
@@ -774,6 +776,7 @@
             startSSESync();
         })();
 
+        // 🎮 渲染隊伍玩家畫面
         function renderTeamView() {
             const data = systemState.teams[teamKey] || initialTeamsData[teamKey];
             const rIdx = systemState.currentRound || 1;
@@ -809,6 +812,7 @@
 
                     let currentIntro = `正在等待 [ ${activeTeamName} ] 進行決策選擇。`;
                     
+                    // 🌳 依據決策歷史路徑解析當前應顯示的劇本文本與按鈕
                     if (rIdx === 1) {
                         if (rData.currentTurnIdx === 0) {
                             currentIntro = round1Content.background;
@@ -849,10 +853,6 @@
                 }
             }
 
-            const fP = Math.max(0, Math.min(100, data.funds));
-            const sP = Math.max(0, Math.min(100, data.stability));
-            const tP = Math.max(0, Math.min(100, data.tech));
-
             mainView.innerHTML = `
                 <div class="hud-screen" id="hudScreen">
                     <svg class="hud-border-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -862,40 +862,23 @@
                         <div class="team-title">${data.name}</div>
                         <div id="netIndicator" class="net-status-badge">${cloudOnline ? '🌐 雲端連線正常':'⚠️ 雲端斷線/更新中'}</div>
                     </div>
-                    
                     <div class="mid-left-panel">
-                        <div class="dial-container">
-                            <div class="dial-svg-wrapper">
-                                <svg viewBox="0 0 60 60">
-                                    <circle class="dial-bg" cx="30" cy="30" r="25"></circle>
-                                    <circle class="dial-fill" cx="30" cy="30" r="25" style="stroke-dashoffset: ${157 - (157 * fP) / 100}; stroke: #00f0ff; filter: drop-shadow(0 0 5px #00f0ff);"></circle>
-                                </svg>
-                                <div class="dial-text">${data.funds}%</div>
-                            </div>
+                        <div class="vertical-bar-container">
+                            <span class="v-bar-val">${data.funds}</span>
+                            <div class="v-bar-outer"><div class="v-bar-inner" style="height: ${data.funds}%;"></div><div class="v-bar-grid"></div></div>
                             <span class="v-bar-label">資產</span>
                         </div>
-                        <div class="dial-container" style="color: #ff7300;">
-                            <div class="dial-svg-wrapper">
-                                <svg viewBox="0 0 60 60">
-                                    <circle class="dial-bg" cx="30" cy="30" r="25" style="stroke: rgba(255,115,0,0.08);"></circle>
-                                    <circle class="dial-fill" cx="30" cy="30" r="25" style="stroke-dashoffset: ${157 - (157 * sP) / 100}; stroke: #ff7300; filter: drop-shadow(0 0 5px #ff7300);"></circle>
-                                </svg>
-                                <div class="dial-text">${data.stability}%</div>
-                            </div>
+                        <div class="vertical-bar-container" style="color: #ff7300;">
+                            <span class="v-bar-val">${data.stability}</span>
+                            <div class="v-bar-outer"><div class="v-bar-inner" style="height: ${data.stability}%;"></div><div class="v-bar-grid"></div></div>
                             <span class="v-bar-label">生命</span>
                         </div>
-                        <div class="dial-container" style="color: #00ffaa;">
-                            <div class="dial-svg-wrapper">
-                                <svg viewBox="0 0 60 60">
-                                    <circle class="dial-bg" cx="30" cy="30" r="25" style="stroke: rgba(0,255,170,0.08);"></circle>
-                                    <circle class="dial-fill" cx="30" cy="30" r="25" style="stroke-dashoffset: ${157 - (157 * tP) / 100}; stroke: #00ffaa; filter: drop-shadow(0 0 5px #00ffaa);"></circle>
-                                </svg>
-                                <div class="dial-text">${data.tech}%</div>
-                            </div>
+                        <div class="vertical-bar-container" style="color: #00ffaa;">
+                            <span class="v-bar-val">${data.tech}</span>
+                            <div class="v-bar-outer"><div class="v-bar-inner" style="height: ${data.tech}%;"></div><div class="v-bar-grid"></div></div>
                             <span class="v-bar-label">科技</span>
                         </div>
                     </div>
-
                     <div class="bottom-left-panel">
                         <svg width="100%" height="100%" style="stroke:currentColor; fill:none; opacity:0.3; stroke-width:0.5;">
                             <circle cx="50" cy="50" r="30" stroke-dasharray="4 4"/>
@@ -927,6 +910,7 @@
             `;
         }
 
+        // 🧠 計算選擇結果並同步
         function executeMatrixChoice(choiceType) {
             mutateAndSyncState(() => {
                 const rIdx = systemState.currentRound;
@@ -967,13 +951,18 @@
                         logDesc = `未定義之分支決策路徑。`;
                     }
                 } else {
-                    // 🛡️ 修正變數指向錯誤缺陷
+                    // 非第一輪的默認兜底兜底算法
                     if (activeTeam === 'A') {
-                        if (choiceType === 'A') { systemState.teams.A.stability = clamp(systemState.teams.A.stability + 15); logDesc = "【政府高層】選擇方案甲。"; } 
-                        else { systemState.teams.A.funds = clamp(systemState.teams.A.funds + 20); logDesc = "【政府高層】選擇方案乙。"; }
+                        if (choiceType === 'A') {
+                            systemState.teams.A.stability = clamp(systemState.teams.A.stability + 15);
+                            logDesc = "【政府高層】選擇方案甲。";
+                        } else {
+                            systemState.teams.A.funds = clamp(systemState.teams.A.funds + 20);
+                            logDesc = "【政府高層】選擇方案乙。";
+                        }
                     } else if (activeTeam === 'B') {
                         if (choiceType === 'A') { systemState.teams.B.tech = clamp(systemState.teams.B.tech + 20); logDesc = "【社團科學家】選擇方案甲。"; }
-                        else { systemState.teams.B.stability = clamp(systemState.teams.B.stability + 20); logDesc = "【社團科學家】選擇方案乙。"; }
+                        else { systemState.teams.B.stability = clamp(state.teams.B.stability + 20); logDesc = "【社團科學家】選擇方案乙。"; }
                     } else if (activeTeam === 'C') {
                         if (choiceType === 'A') { systemState.teams.C.funds = clamp(systemState.teams.C.funds + 20); logDesc = "【工廠資方】選擇方案甲。"; }
                         else { systemState.teams.C.tech = clamp(systemState.teams.C.tech + 20); logDesc = "【工廠資方】選擇方案乙。"; }
@@ -989,6 +978,7 @@
             });
         }
 
+        // 🏛️ 渲染後台主控畫面
         function renderHostView() {
             const rIdx = systemState.currentRound || 1;
             const rData = systemState.rounds[rIdx];
@@ -1001,7 +991,7 @@
                 <div class="host-screen">
                     <div class="host-top-bar">
                         <div class="host-header">🌌 量子核心主控台 
-                            <span class="sync-indicator">📡 劇本分歧同步版 (v${systemState.version || 0})</span>
+                            <span class="sync-indicator">📡 劇本動態分歧同步版 (v${systemState.version || 0})</span>
                             <span id="netIndicator" class="net-status-badge" style="margin-left:15px;">${cloudOnline ? '🌐 雲端連線正常':'⚠️ 雲端斷線/更新中'}</span>
                         </div>
                         <div style="display:flex; gap:10px;">
