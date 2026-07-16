@@ -283,6 +283,13 @@
                             B: { label: "你們不打算成為財閥的私有工具，利用這筆資金完成了技術突破後，將代碼以「開源」形式向全城廣播，在民間建立起崇高的聲望", effect: (state) => { state.teams.B.stability += 15; state.teams.B.tech -=10; state.teams.A.tech -=15; state.teams.D.tech +=15; state.teams.D.stability +=20; } }
                         }
                     },
+                    "A_A_D_A_B": {
+                        text: "政府的軍事戒嚴大獲成功，在勞工的順從配合下，統治威權達到頂峰。此時，政府調轉槍頭，開始全面清算獨立的科研機構，被切斷實驗室能源的科學家即將迎來他們的命運抉擇",
+                        choices: {
+                            A: { label: "看到連最龐大的勞工群體都選擇順從，你們選擇向政府軍隊敞開實驗室大門，交出最高核心代碼，併入國家科研體制", effect: (state) => { state.teams.B.stability += 15; state.teams.B.funds -=10; state.teams.A.tech += 20; } },
+                            B: { label: "科學家拒絕成為極權政府監控人民的幫兇。在戒嚴部隊破門前的一刻，你們攜帶輕便儀器逃往城市邊緣的廢棄黑區", effect: (state) => { state.teams.B.tech += 10; state.teams.B.funds -=15; state.teams.A.funds -=20; state.teams.A.tech -=15; } }
+                        }
+                    },
                     "DEFAULT": {
                         text: "歷史走勢難測，第三順位陣營此時必須在有限的能量殘餘中做出決定：",
                         choices: {
