@@ -297,6 +297,13 @@
                             B: { label: "你們拒絕成為獨裁者的幫兇，在實驗室被查封前，帶著最核心的量子加密代碼與圖紙，逃入了勞工秘密建立的地下黑市聚落", effect: (state) => { state.teams.B.tech += 10; state.teams.B.funds -=15; state.teams.A.tech -=15; state.teams.D.tech +=15; } }
                         }
                     },
+                    "A_B_C_A_B": {
+                        text: "政商兩大巨頭在沒有戒嚴的表象下，暗中達成利益同盟，這讓被抄家查封的科學家陷入破產邊緣，而最底層的勞工則迎來了更隱蔽、卻更殘酷的經濟壓榨",
+                        choices: {
+                            A: { label: "為了活命並重啟實驗室，你們將壓箱寶的專利技術低價賣給財閥，換取急需的啟動資金與庇護", effect: (state) => { state.teams.B.stability += 10; state.teams.B.funds +=20; state.teams.C.tech += 20; } },
+                            B: { label: "你們看透了政商勾結的醜陋，在被徹底查封前，將所有自動化生產與防衛代碼「開源」廣播給全城", effect: (state) => { state.teams.B.tech -= 15; state.teams.B.stability +=15; state.teams.C.funds -=20; state.teams.D.tech +=10; state.teams.D.stability +=10; } }
+                        }
+                    },
                     "DEFAULT": {
                         text: "歷史走勢難測，第三順位陣營此時必須在有限的能量殘餘中做出決定：",
                         choices: {
