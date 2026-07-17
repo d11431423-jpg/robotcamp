@@ -290,6 +290,13 @@
                             B: { label: "科學家拒絕成為極權政府監控人民的幫兇。在戒嚴部隊破門前的一刻，你們攜帶輕便儀器逃往城市邊緣的廢棄黑區", effect: (state) => { state.teams.B.tech += 10; state.teams.B.funds -=15; state.teams.A.funds -=20; state.teams.A.tech -=15; } }
                         }
                     },
+                    "A_A_D_B_B": {
+                        text: "政府雖然宣稱掌控全城，但廢棄街區的夜空中，依然閃爍著勞工私接黑市電網的零星燈火。此時，政府將目標轉向獨立實驗室，而夾在中間的科學家，必須在招安與流亡之間做出抉擇",
+                        choices: {
+                            A: { label: "你們為了自保，交出了實驗室，並協助政府研發全新的「智能反偷電偵測演算法」，能精準切斷勞工的地下黑市電線", effect: (state) => { state.teams.B.stability += 15; state.teams.B.funds -=10; state.teams.A.tech += 20; state.teams.D.tech -=10; } },
+                            B: { label: "你們拒絕成為獨裁者的幫兇，在實驗室被查封前，帶著最核心的量子加密代碼與圖紙，逃入了勞工秘密建立的地下黑市聚落", effect: (state) => { state.teams.B.tech += 10; state.teams.B.funds -=15; state.teams.A.tech -=15; state.teams.D.tech +=15; } }
+                        }
+                    },
                     "DEFAULT": {
                         text: "歷史走勢難測，第三順位陣營此時必須在有限的能量殘餘中做出決定：",
                         choices: {
@@ -303,12 +310,54 @@
                 // 【第 4 順位】 格式：`前三手軌跡_當前作答陣營`
                 // -----------------------------------------------------------------
                 step4: {
-                    // 範例：A選A -> B選A -> C選A -> 現在輪到 D 抉擇 (最慘烈的底層處境)
-                    "A_A_B_A_C_A_D": {
-                        text: "政府、學界、資方三方全面聯手(AAA)，全城戒嚴且滴水不漏。底層勞工(D)正面臨生死存亡之秋：",
+                    // 範例：A選A -> C選A -> B選A -> 現在輪到 D 抉擇
+                    "A_A_C_A_B_A_D": {
+                        text: "政府的軍隊、資本的資金與科學家的技術徹底合流，組成堅不可摧的統治鐵三角。在這座燈火通明的極權城市中，沒有任何談判籌碼的勞工，正被逼入毫無退路的命運終點",
                         choices: {
-                            A: { label: "🩸 A選項：發動最後的街頭暴動 (破釜沉舟)", desc: "殊死一搏，對全城基礎建設造成毀滅性破壞！", effect: (state) => { state.teams.D.stability -= 20; state.teams.A.stability -= 25; state.teams.C.funds -= 25; } },
-                            B: { label: "🏳️ B選項：向威權屈服，成為新秩序的齒輪", desc: "放棄抵抗，接受終身勞役以保活命。", effect: (state) => { state.teams.D.stability += 15; state.teams.D.funds -= 10; } }
+                            A: { label: "面對軍隊、財團與科技監控的絕對力量，你們選擇走回工廠，在毫無安全保障、高壓過載的環境下日夜趕工，用血汗換取微薄的配給糧食", effect: (state) => { state.teams.D.stability -= 10; state.teams.D.funds +=15; state.teams.A.funds += 10; state.teams.C.funds += 10; } },
+                            B: { label: "既然橫豎都是死，勞工決定發起全城大罷工，集體離開崗位，讓整座城市的生產力在一夜之間歸零", effect: (state) => { state.teams.D.stability -= 5; state.teams.A.funds -=25; state.teams.B.funds -=10; state.teams.C.funds -= 25; } }
+                        }
+                    },
+                    "A_A_C_A_B_B_D": {
+                        text: "政府與資本聯手築起鋼鐵般的特權防線，但科學家在暗中釋放了數位病毒，癱瘓了中央電網，並將能源偷偷導向底層",
+                        choices: {
+                            A: { label: "有了科學家的支援，你們不再忍耐，組成自衛隊，強行衝入被切斷中央控制的工廠，開始自行運作並分發資源", effect: (state) => { state.teams.D.stability -= 10; state.teams.D.funds +=20; state.teams.A.stability -= 15; state.teams.C.funds -= 25; } },
+                            B: { label: "你們決定不與政府的軍隊正面硬碰硬，利用科學家導引過來的非法電力，建立起自給自足的地下社區", effect: (state) => { state.teams.D.stability += 15; state.teams.D.tech +=10; state.teams.A.funds -=5; state.teams.B.stability += 10; } }
+                        }
+                    },
+                    "A_A_C_B_B_A_D": {
+                        text: "政府的軍事戒嚴與資本的地下金融持續對峙，而科學家已將核心技術獨家交給資本家，形成了全新的特權階級，而被兩大巨頭夾在中間的勞工，生存空間被進一步壓縮",
+                        choices: {
+                            A: { label: "你們決定簽署專屬的地下僱傭合約，進入資本家被技術屏蔽的秘密工廠工作", effect: (state) => { state.teams.D.stability += 10; state.teams.D.funds +=15; state.teams.A.funds -= 10; state.teams.C.funds += 10; } },
+                            B: { label: "你們決定發起全面怠工，既不配合政府的強行徵用，也不進入資本家的地下工廠，退出所有生產線", effect: (state) => { state.teams.D.stability -= 5; state.teams.A.funds -=15; state.teams.C.funds -= 15; } }
+                        }
+                    },
+                    "A_A_C_B_B_B_D": {
+                        text: "政府與資本的頂層對峙陷入僵局，而科學家的開源廣播，讓最底層的勞工瞬間掌握了能源主導權，從任人宰割的燃料，變成了左右城市命運的關鍵棋子",
+                        choices: {
+                            A: { label: "你們在貧民窟與廢棄街區自行組建微型微電網與自動化農業溫室，實現了完全的自給自足", effect: (state) => { state.teams.D.stability += 15; state.teams.D.tech +=10; state.teams.A.funds -= 10; state.teams.C.funds -= 10; } },
+                            B: { label: "你們決定利用科學家給的代碼， 將民用科技武器化，對政府的戒嚴部隊與資本家的防衛系統發起全面反擊", effect: (state) => { state.teams.D.stability -= 10; state.teams.D.tech +=15; state.teams.A.funds -=20; state.teams.A.stability -=15; state.teams.C.funds -= 20; } }
+                        }
+                    },
+                    "A_A_D_A_B_A_C": {
+                        text: "政府靠著鐵腕戒嚴全面掌控了局勢，勞工選擇順從並交出資源，科學家也帶著核心技術向國家臣服。此時，被完全孤立在體制外的資本財閥，正面臨資產被國家逐步蠶食的生死關頭",
+                        choices: {
+                            A: { label: "看清局勢後，你們主動將旗下的能源工廠、物流鏈與金融股份上繳給政府，換取在國家經濟委員會中的特權席次", effect: (state) => { state.teams.C.stability += 15; state.teams.C.funds -=25; state.teams.A.funds += 15; } },
+                            B: { label: "你們不甘心將一生心血拱手讓給政府，動用積攢的海外秘密網絡，將工廠設備、黃金與數位貨幣透過地下黑市強行轉移出境", effect: (state) => { state.teams.C.stability -= 15; state.teams.C.funds +=15; state.teams.A.funds -=15; state.teams.D.funds +=10; } }
+                        }
+                    },
+                    "A_A_D_A_B_B_C": {
+                        text: "政府全面掌控了街頭，勞工也選擇順從並交出資源。然而，科學家拒絕向國家臣服。而手中握有龐大資金卻缺乏技術的資本財閥，正站在向體制投降或投資地下反抗勢力的十字路口",
+                        choices: {
+                            A: { label: "你們決定充當政府的耳目，暗中蒐集流亡科學家的動向，並將情報交給戒嚴部隊，換取政府發放的「獨家特許經營權」", effect: (state) => { state.teams.C.stability += 10; state.teams.C.funds +=15; state.teams.A.tech += 15; state.teams.B.stability -=10; state.teams.B.tech -=10; } },
+                            B: { label: "你們深知，一旦政府把科學家抓完，下一個就是財閥，決定鋌而走險，透過地下渠道輸送物資與設備給流亡的科學家，讓他們在地下重啟研發", effect: (state) => { state.teams.C.tech += 20; state.teams.C.funds -=20; state.teams.A.stability -=10; state.teams.B.funds +=20; state.teams.B.stability +=10; } }
+                        }
+                    },
+                    "A_A_D_B_B_A_C": {
+                        text: "政府獲得了科學家的技術投誠，開始精準切斷勞工的地下私電。此時，「政、科」聯手將絞索套在了底層脖子上，而在一旁觀戰的資本財閥，迎來了決定局勢走向的最終機會",
+                        choices: {
+                            A: { label: "你們看準政府與科學家已經牢牢控制大局，砸下重金收購國債，為軍隊提供財政後盾，換取未來對全城電網的私有化經營權", effect: (state) => { state.teams.C.stability += 10; state.teams.C.funds -=20; state.teams.A.funds += 10; state.teams.D.stability -=10; } },
+                            B: { label: "眼看勞工被政府與科學家逼入絕境，你們決定在地下黑區建立「企業庇護所」，出資幫勞工升級設備，截獲了大量廉價且感激涕零的勞動力", effect: (state) => { state.teams.C.tech += 10; state.teams.C.funds -=15; state.teams.A.funds -=15; state.teams.D.stability +=10; state.teams.D.funds +=10; } }
                         }
                     },
                     "DEFAULT": {
