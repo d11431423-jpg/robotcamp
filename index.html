@@ -191,7 +191,7 @@
                     B: {
                         text: "AI 核心過載的瞬間，巨大的能量脈衝導致中央電網瞬間癱瘓，半數區域陷入一片黑暗。殘存的緊急電力所剩無幾，這寶貴的能源究竟該送往何處，考驗著所有人的神經",
                         choices: {
-                            A: { label: "你們認為技術成果高於一切，切斷了民生供電，將殘存能源全部用來維持高端伺服器運作，防止AI核心的核心數據因斷電而永久遺失", effect: (state) => { state.teams.B.tech += 20; state.teams.D.stability -= 15; } },
+                            A: { label: "你們認為技術成果高於一切，切斷了民生供電，將殘存能源全部用來維持高端伺服器運作", effect: (state) => { state.teams.B.tech += 20; state.teams.D.stability -= 15; } },
                             B: { label: "你們選擇與市民站在一起，燃燒了實驗室最後的備用發電機，拒絕了財閥的收購，將如何重組電網技術直接開源廣播", effect: (state) => { state.teams.B.stability += 10; state.teams.D.tech += 15; } }
                         }
                     },
@@ -242,8 +242,8 @@
                     "A_B_C": {
                         text: "政府發布特赦行政令，以「維護國家安全、避免浪費能源」為由，強行切斷科學家的備用電力，並將其研究資產充公。科學家瞬間面臨破產與滅頂之災，而其餘陣營則人人自危",
                         choices: {
-                            A: { label: "為了自保，你們決定主動走向政府，提出「政商一體」的合作案。提供大量的商業資金與後勤物資支持政府的維穩行動", effect: (state) => { state.teams.C.funds -= 15; state.teams.C.stability +=15; state.teams.A.funds += 10; state.teams.D.stability -=15; } },
-                            B: { label: "你們決定在黑市砸下巨資，購買高價的獨立私電系統。同時，為了牽制權力過大的政府，你們決定成為科學家的秘密金主", effect: (state) => { state.teams.C.funds -= 20; state.teams.C.stability +=15; state.teams.A.funds -= 20; state.teams.B.funds ==10; } }
+                            A: { label: "你們決定走向政府，提出「政商一體」的合作案。提供大量的商業資金與後勤物資支持政府的維穩行動", effect: (state) => { state.teams.C.funds -= 15; state.teams.C.stability +=15; state.teams.A.funds += 10; state.teams.D.stability -=15; } },
+                            B: { label: "你們決定在黑市購買高價的獨立私電系統。同時，為了牽制權力過大的政府，你們決定成為科學家的秘密金主", effect: (state) => { state.teams.C.funds -= 20; state.teams.C.stability +=15; state.teams.A.funds -= 20; state.teams.B.funds ==10; } }
                         }
                     },
                     "A_B_D": {
@@ -251,6 +251,13 @@
                         choices: {
                             A: { label: "勞工決定砸下血汗錢在黑市「撈油水」。你們把零件和核心代碼搬回貧民窟，雖然資產失血，但民間的科技火種瞬間被點燃", effect: (state) => { state.teams.D.funds -= 10; state.teams.D.tech += 20; state.teams.B.funds -=10; } },
                             B: { label: "你們決定不湊這場熱鬧，繼續當個聽話的齒輪，按時上下班並囤積物資", effect: (state) => { state.teams.D.stability += 5; state.teams.D.funds +=15; state.teams.A.funds += 10; } }
+                        }
+                    },
+                    "B_A_C": {
+                        text: "民間街道與政府辦公大樓徹底陷入一片死寂與黑暗，唯有資本的摩天大樓群的核心伺服器依然閃爍著幽藍的光芒。科學家成功保全了核心數據，但也將其他階級拋棄在寒冬與混亂之中",
+                        choices: {
+                            A: { label: "你們啟動了旗下的私人微型發電廠，但向陷入混亂的政府與凍餒的勞工開出天價的「電力訂閱制」", effect: (state) => { state.teams.C.funds += 20; state.teams.A.funds -= 15; state.teams.D.stability -=10; } },
+                            B: { label: "你們推測政府在斷電後會動用武力強闖大樓掠奪數據，砸下大筆資產，啟動摩天大樓的電磁防禦網與自動防衛砲塔", effect: (state) => { state.teams.C.funds -= 15; state.teams.C.stability +=20; state.teams.A.tech -=15; state.teams.A.stability -= 5; } }
                         }
                     },
                     // 💡 防呆後備節點 (如果主持人排出了未定義的陣營順位，會直接抓這個通用節點，避免網頁當掉)
@@ -280,7 +287,7 @@
                         text: "政府的戒嚴遭遇了資本的反抗。同時，資本家用大筆資金暗中扶植被查封的科學家。此時，全城的焦點都落在科學家身上，而最底層的勞工則在兩大集團的夾縫中等待局勢洗牌",
                         choices: {
                             A: { label: "你們決定履行與資本家的秘密協議，將新研發的技術與高效能源代碼，獨家提供給金援你們的資本家", effect: (state) => { state.teams.B.tech += 10; state.teams.B.funds +=15; state.teams.A.tech -= 15; state.teams.C.tech +=15 } },
-                            B: { label: "你們不打算成為財閥的私有工具，利用這筆資金完成了技術突破後，將代碼以「開源」形式向全城廣播，在民間建立起崇高的聲望", effect: (state) => { state.teams.B.stability += 15; state.teams.B.tech -=10; state.teams.A.tech -=15; state.teams.D.tech +=15; state.teams.D.stability +=20; } }
+                            B: { label: "你們不打算成為財閥的私有工具，利用這筆資金完成了技術突破後，將代碼以「開源」形式向全城廣播", effect: (state) => { state.teams.B.stability += 15; state.teams.B.tech -=10; state.teams.A.tech -=15; state.teams.D.tech +=15; state.teams.D.stability +=20; } }
                         }
                     },
                     "A_A_D_A_B": {
