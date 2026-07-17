@@ -318,6 +318,13 @@
                             B: { label: "在實驗室被攻破的最後一刻，你們決定玉石俱焚，按下了開源鍵，將生存密碼與免費電力技術無償發送給全體市民", effect: (state) => { state.teams.B.tech += 10; state.teams.B.stability -=5; state.teams.A.tech -=20; state.teams.D.tech +=10; state.teams.D.stability +=5; } }
                         }
                     },
+                    "A_B_D_B_B": {
+                        text: "政府的緝捕隊正在科研區瘋狂破門。而隔壁街區的勞工工廠依然馬力全開，底層市民選擇當個聽話的齒輪。沒有民間的掩護，也沒有黑市的接應，科學家的象牙塔被徹底孤立",
+                        choices: {
+                            A: { label: "你們帶著尚未被查封的終極加密技術，秘密進入資本的摩天大樓，以出賣技術主權為代價換取庇護", effect: (state) => { state.teams.B.stability += 5; state.teams.B.funds +=20; state.teams.C.tech += 25; } },
+                            B: { label: "在實驗室被攻破的最後一刻，你們釋放了毀滅性的數據病毒，這場技術自爆瞬間癱瘓了城市的基礎設施", effect: (state) => { state.teams.B.tech += 10; state.teams.B.stability -=10; state.teams.A.tech -=25; state.teams.D.tech -=10; state.teams.C.tech -=5; } }
+                        }
+                    },
                     "DEFAULT": {
                         text: "歷史走勢難測，第三順位陣營此時必須在有限的能量殘餘中做出決定：",
                         choices: {
@@ -428,6 +435,20 @@
                         choices: {
                             A: { label: "你們拒絕承認民間的技術合法性，強行對使用開源技術的勞工提起專利訴訟，並沒收他們的改裝設備", effect: (state) => { state.teams.C.funds -=10; state.teams.C.tech +=10; state.teams.D.tech -= 10; } },
                             B: { label: "你們砸下重金封鎖了實體物流，勞工空有頂級開源代碼，卻缺乏硬體載體去製造武器和發電機", effect: (state) => { state.teams.C.funds -=15; state.teams.A.funds -=20; state.teams.D.stability -=5; state.teams.D.tech -=10; } }
+                        }
+                    },
+                    "A_B_D_B_B_A_C": {
+                        text: "獨立科學界在孤立無援中瓦解，但政府竹籃打水一場空。科學家們在被逮捕前，帶著最核心的技術專利投靠了資本。而當初選擇冷眼旁觀的勞工，已經徹底失去了科技底牌",
+                        choices: {
+                            A: { label: "你們立刻將科學家的技術商品化、專利化，向全城推出昂貴的訂閱制微型電網與醫療晶片", effect: (state) => { state.teams.C.funds +=15; state.teams.A.tech -=20; state.teams.D.funds -= 5; } },
+                            B: { label: "你們深知政府遲早會來搶人，砸下大筆資產，把企業保安隊全面升級為「私人工隊」，公然在街頭與政府的緝捕隊駁火", effect: (state) => { state.teams.C.funds -=20; state.teams.C.stability +=15; state.teams.A.stability -=10; state.teams.A.funds -=15; } }
+                        }
+                    },
+                    "A_B_D_B_B_B_C": {
+                        text: "科學家在實驗室被攻破的前一刻釋放了病毒，全城電網陷入大癱瘓。政府試圖奪取的技術化為烏有，只想安穩度日的勞工也遭到波及，唯有擁有獨立發電廠的資本，能維持安穩生活",
+                        choices: {
+                            A: { label: "你們利用旗下的獨立能源，對走投無路的勞工實施高利貸式的救援", effect: (state) => { state.teams.C.funds +=20; state.teams.C.stability +=10; state.teams.A.funds -=15; state.teams.D.funds -= 20; } },
+                            B: { label: "你們動用海外儲備的乾淨伺服器與工程隊，砸下重金協助重整，奪取了整座城市未來的基建控制權", effect: (state) => { state.teams.C.funds -=20; state.teams.C.tech +=30; state.teams.A.tech +=5; state.teams.A.funds -=10; state.teams.D.tech +=5; state.teams.D.funds -=10; } }
                         }
                     },
                     "DEFAULT": {
