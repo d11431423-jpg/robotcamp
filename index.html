@@ -304,6 +304,13 @@
                             B: { label: "你們看透了政商勾結的醜陋，在被徹底查封前，將所有自動化生產與防衛代碼「開源」廣播給全城", effect: (state) => { state.teams.B.tech -= 15; state.teams.B.stability +=15; state.teams.C.funds -=20; state.teams.D.tech +=10; state.teams.D.stability +=10; } }
                         }
                     },
+                    "A_B_C_B_B": {
+                        text: "政府的行政清算遭遇了資本的全面金錢反制。財閥用大筆資金在地下秘密扶植被查封的科學家。而夾在政府與財閥兩大巨頭之間的勞工，則在觀望這場體制外的神仙打架",
+                        choices: {
+                            A: { label: "你們拿了財閥的錢，決定將技術獨家交付給資本家。這讓資本的科技實力瞬間超越政府，擁有完全屏蔽政府查稅與監控的地下商業帝國", effect: (state) => { state.teams.B.tech += 10; state.teams.B.funds +=20; state.teams.A.funds -=20; state.teams.C.tech += 20; } },
+                            B: { label: "你們利用資本家的資金完成了關鍵的能源技術突破，但拒絕讓科學成為財閥的私有財產，私下將代碼以「開源」形式向全城廣播", effect: (state) => { state.teams.B.tech -= 5; state.teams.B.stability +=15; state.teams.A.funds -=15; state.teams.D.tech +=10; state.teams.D.stability +=10; } }
+                        }
+                    },
                     "DEFAULT": {
                         text: "歷史走勢難測，第三順位陣營此時必須在有限的能量殘餘中做出決定：",
                         choices: {
@@ -379,6 +386,20 @@
                         choices: {
                             A: { label: "面對政、商、科聯手的絕對力量，勞工放棄了任何對抗的念頭。在財閥與科學家設計的監控系統下，不分晝夜地瘋狂加班", effect: (state) => { state.teams.D.stability -=20; state.teams.D.funds +=10; state.teams.A.funds += 10; state.teams.C.funds +=20; } },
                             B: { label: "你們決定集體罷工，並砸下僅存的積蓄在地下黑市走私非法醫療物資與糧食，強行把生命值拉回安全線", effect: (state) => { state.teams.D.stability += 15; state.teams.D.funds -=15; state.teams.A.funds -=10; state.teams.C.funds -=10; } }
+                        }
+                    },
+                    "A_B_C_A_B_B_D": {
+                        text: "政府與資本表面上達成了政商利益同盟，但科學家在被徹底查封前，將系統與自動化升級代碼無償廣播給了民間，讓原本遭到資本家瘋狂壓榨的勞工生命力大補血",
+                        choices: {
+                            A: { label: "你們利用代碼繞過了財閥的監控系統，直接篡改了工廠核心機器的控制權，將產品與利潤直接扣留並重新分配", effect: (state) => { state.teams.D.stability -=5; state.teams.D.funds +=20; state.teams.A.funds -= 15; state.teams.C.funds -=25; } },
+                            B: { label: "你們決定發起一場前所未有的科技不合作運動，利用科學家提供的干擾裝置，全面屏蔽了全城的訊號，讓整座城市的生產力瞬間陷入死寂", effect: (state) => { state.teams.D.stability += 10; state.teams.D.tech +=5; state.teams.A.funds -=20; state.teams.C.funds -=20; } }
+                        }
+                    },
+                    "A_B_C_B_B_A_D": {
+                        text: "資本的金援與科學家的黑科技在體制外深度結合，讓政府的行政控制全面失靈。然而，這場科技內鬥，並沒有惠及底層，毫無資源的勞工依舊在夾縫中，等待最後的生存抉擇",
+                        choices: {
+                            A: { label: "既然政府無能、科技也成了財閥的私有物，勞工只能集體進入資本家那座被技術屏蔽的秘密工廠工作，換取穩定的物資與高科技庇護", effect: (state) => { state.teams.D.stability +=10; state.teams.D.funds +=5; state.teams.A.funds -= 10; state.teams.C.funds +=10; } },
+                            B: { label: "你們決定發起全面不合作運動，既不幫政府維持城市運作，也不進財閥的工廠", effect: (state) => { state.teams.D.stability -= 5; state.teams.D.tech +=5; state.teams.A.funds -=15; state.teams.C.funds -=15; } }
                         }
                     },
                     "DEFAULT": {
