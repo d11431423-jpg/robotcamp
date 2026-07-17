@@ -374,6 +374,13 @@
                             B: { label: "你們看準了這股民間力量的潛力，決定賭一把大的。你們動用海外秘密帳戶，全面資助科學家與勞工的研發與生活，對政府造成毀滅性打擊", effect: (state) => { state.teams.C.tech += 20; state.teams.C.funds -=10; state.teams.A.funds -=25; state.teams.A.stability -=10; state.teams.B.funds +=10; state.teams.D.funds +=10; } }
                         }
                     },
+                    "A_B_C_A_B_A_D": {
+                        text: "「政、商、科」三方在體制內完成了資源與技術的合流，而這場繁榮的代價，全由毫無技術、被徹底孤立的勞工在工廠底層用血汗獨自承擔",
+                        choices: {
+                            A: { label: "面對政、商、科聯手的絕對力量，勞工放棄了任何對抗的念頭。在財閥與科學家設計的監控系統下，不分晝夜地瘋狂加班", effect: (state) => { state.teams.D.stability -=20; state.teams.D.funds +=10; state.teams.A.funds += 10; state.teams.C.funds +=20; } },
+                            B: { label: "你們決定集體罷工，並砸下僅存的積蓄在地下黑市走私非法醫療物資與糧食，強行把生命值拉回安全線", effect: (state) => { state.teams.D.stability += 15; state.teams.D.funds -=15; state.teams.A.funds -=10; state.teams.C.funds -=10; } }
+                        }
+                    },
                     "DEFAULT": {
                         text: "世界線最終站。在此寫下最後的判決與歷史結尾：",
                         choices: {
