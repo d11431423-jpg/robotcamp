@@ -416,6 +416,13 @@
                             B: { label: "勞工與科學家聯手，對政府的行政中樞與資本的金庫發起了全面的「數位與實體清算」，強行將上層壟斷的財富據為己有", effect: (state) => { state.teams.D.stability -= 10; state.teams.D.funds +=25; state.teams.A.funds -=25; state.teams.C.funds -=25; } }
                         }
                     },
+                    "A_B_D_A_B_A_C": {
+                        text: "獨立科學界徹底瓦解，但政府並未成功收歸國有。科學家帶著最後的核心專利，遁入了資本的摩天大樓。而此時的勞工雖然淘到了部分科技硬體，卻面臨資本與政府接下來的雙重收割",
+                        choices: {
+                            A: { label: "你們立刻將科學家的技術商品化、專利化，向全城推出昂貴的訂閱制微型電網與醫療晶片", effect: (state) => { state.teams.C.funds +=15; state.teams.A.tech -=20; state.teams.D.funds -= 5; } },
+                            B: { label: "你們深知政府遲早會來搶人，砸下大筆資產，把企業保安隊全面升級為「私人工隊」，公然在街頭與政府的緝捕隊駁火", effect: (state) => { state.teams.C.stability += 15; state.teams.C.funds -=20; state.teams.A.funds -=15; state.teams.A.stability -=10; } }
+                        }
+                    },
                     "DEFAULT": {
                         text: "世界線最終站。在此寫下最後的判決與歷史結尾：",
                         choices: {
