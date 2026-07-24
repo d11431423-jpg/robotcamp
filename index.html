@@ -274,6 +274,13 @@
                             B: { label: "你們展現了長遠的商業眼光，砸下重金資助面臨官方調查的科學家，準備搶先一步建立新一代的電力標準。", effect: (state) => { state.teams.C.funds -= 15; state.teams.C.tech += 25; state.teams.B.funds += 15; } }
                         }
                     },
+                    "B_B_D": {
+                        text: "科學家大無畏的開源廣播，讓勞工在黑暗中獲得了自救的火種。然而，這也徹底打亂了政府試圖管制科技的計畫，更讓原本好整以暇、準備收割數據的資本財閥撲了個空。",
+                        choices: {
+                            A: { label: "你們利用開源代碼破解了街區地下的電力防禦，直接從資本財閥的高壓備用電纜中「物理抽血」，把電力分流。", effect: (state) => { state.teams.D.stability += 10; state.teams.D.tech += 10; state.teams.C.tech -= 15; } },
+                            B: { label: "底層的年輕技術工人們把科學家的開源代碼改造成各種「非法電力外掛」與「加密通訊晶片」，並在黑市瘋狂拋售。", effect: (state) => { state.teams.D.funds += 25; state.teams.D.stability -= 10; state.teams.A.tech -= 20; } }
+                        }
+                    },
                     // 💡 防呆後備節點 (如果主持人排出了未定義的陣營順位，會直接抓這個通用節點，避免網頁當掉)
                     "DEFAULT": {
                         text: "當前陣營面臨前方的分歧局勢，必須採取緊急行動：",
@@ -387,6 +394,20 @@
                             A: { label: "你們動用法律力量，宣布民間的新能源技術為國家戰略資產，必須強制納入官方審查。", effect: (state) => { state.teams.A.tech += 20; state.teams.C.funds -= 25; } },
                             B: { label: "你們向陷入混亂的勞工發布徵調令，強行要求底層市民在無酬勞的情況下，冒著寒冬加班搶修政府控制的核心電網。", effect: (state) => { state.teams.A.stability += 15; state.teams.A.funds -= 10; state.teams.D.funds -= 15; state.teams.D.stability -= 10; } }
                          }
+                    },
+                    "B_B_D_A_A": {
+                        text: "勞工靠著「借用」財閥的電力大舉復活，生命力強勢回升。然而，這不僅讓資本的高壓電網出現嚴重電壓不穩，更在城市底層建立起了一套完全不受官方管控的「土法地下電網」。",
+                        choices: {
+                            A: { label: "你們派出執法隊進駐勞工街區，強力剪斷私接電纜，並宣布將這套土法電網「公有化」納入國家編制。", effect: (state) => { state.teams.A.tech += 5; state.teams.A.stability += 10; state.teams.D.stability -= 15; } },
+                            B: { label: "你們直接調動執法力量，強行將這批「電力充足、體力恢復」的勞工成批押上官方工地，逼迫他們無酬搶修國家公共基建。", effect: (state) => { state.teams.A.stability += 15; state.teams.A.funds -= 10; state.teams.D.funds -= 15; state.teams.D.stability -= 10; } }
+                        }
+                    },
+                    "B_B_D_B_A": {
+                        text: "在科學家將技術代碼向全城開源後，勞工將其改造成「非法電力外掛」與「加密通訊晶片」。無數的加密訊號在底層流竄，導致整座城市的治安監控與電力網路陷入徹底失控的混亂。",
+                        choices: {
+                            A: { label: "你們下達緊急戒嚴令，派遣大批防暴警察進駐底層街區，砸毀黑市攤位並沒收所有非法通訊設備。", effect: (state) => { state.teams.A.tech += 10; state.teams.D.funds -= 15; } },
+                            B: { label: "你們利用大數據追蹤，強制將這批擅長改裝代碼的民間黑客與技術勞工抓捕並編入官方工程隊。", effect: (state) => { state.teams.A.stability += 15; state.teams.A.funds -= 10; state.teams.D.tech -= 15; state.teams.D.stability -= 10; } }
+                        }
                     },
                     "DEFAULT": {
                         text: "歷史走勢難測，第三順位陣營此時必須在有限的能量殘餘中做出決定：",
@@ -582,6 +603,48 @@
                         choices: {
                             A: { label: "你們積極配合官方的修復工作，成為重建工程的核心主力。", effect: (state) => { state.teams.D.stability += 15; state.teams.D.funds += 10; state.teams.A.tech += 15; } },
                             B: { label: "你們在工餘時間將開源技術應用在設備改良上，率先恢復了實體生產，並向市場供應更廉價的改良型民生電子產品。", effect: (state) => { state.teams.D.funds += 5; state.teams.D.tech += 10; state.teams.C.tech -= 10; } }
+                        }
+                    },
+                    "B_B_C_B_A_A_D": {
+                        text: "雖然中央電網依然癱瘓，但政府的強力介入打破了科學家與資本的技術壟斷計畫。官方宣布所有新型電力協議必須收歸國有，這讓財閥受到限制，但也意味著新技術將轉為公共資產。",
+                        choices: {
+                            A: { label: "你們利用穩定的零件與開源技術，在各個社區搭建起去中心化的微型供電網與應急避難點。", effect: (state) => { state.teams.D.stability += 20; state.teams.D.funds -= 10; state.teams.A.tech -= 10; } },
+                            B: { label: "你們在工餘時間將開源技術應用在設備改良上，率先恢復了實體生產，並向市場供應更廉價的改良型民生電子產品。", effect: (state) => { state.teams.D.funds += 5; state.teams.D.tech += 10; state.teams.C.tech -= 10; } }
+                        }
+                    },
+                    "B_B_C_B_A_B_D": {
+                        text: "儘管科學家與資本達成了新技術的戰略結盟，但政府對此不予理會，直接將勞工成批徵調至舊電網工地。底層市民在缺乏物資與寒冷的環境下面臨著沉重的勞動壓力。",
+                        choices: {
+                            A: { label: "你們積極配合官方的修復工作，成為重建工程的核心主力。", effect: (state) => { state.teams.D.stability += 15; state.teams.D.funds += 10; state.teams.A.tech += 15; } },
+                            B: { label: "你們在工餘時間將開源技術應用在設備改良上，率先恢復了實體生產，並向市場供應更廉價的改良型民生電子產品。", effect: (state) => { state.teams.D.funds += 5; state.teams.D.tech += 10; state.teams.C.tech -= 10; } }
+                        }
+                    },
+                    "B_B_D_A_A_A_C": {
+                        text: "街頭上私接的霓虹燈再度熄滅，政府的強力介入打破了勞工的免費電力美夢。與此同時，資本財閥驚覺自己被偷接的電纜雖然被官方切斷，但這套技術資產現在居然落入了政府手中。",
+                        choices: {
+                            A: { label: "你們利用法律條款與殘存的合約，對政府的強行沒收行為進行瘋狂的財政索賠，同時大幅調高剩餘私有能源的價格。", effect: (state) => { state.teams.C.funds += 10; state.teams.A.funds -= 15; state.teams.D.stability -= 20; } },
+                            B: { label: "你們決定不再信任體制，砸下巨額資金，將大樓轉化為全封閉的武裝堡壘，並切斷與政府的技術合作。", effect: (state) => { state.teams.C.funds -= 15; state.teams.C.stability += 20; state.teams.A.tech -= 15; } }
+                        }
+                    },
+                    "B_B_D_A_A_B_C": {
+                        text: "雖然勞工靠著盜接財閥的電力點亮了街區，但這大張旗鼓的通電也引來了執法隊，強行將大批勞工押解至官方工地。勞工階級在寒冬中被迫進行高強度的無酬基建搶修。",
+                        choices: {
+                            A: { label: "既然政府在利用勞工修電網，你們便向政府與瀕臨極限的勞工高價租售企業旗下的重型工程機具。", effect: (state) => { state.teams.C.funds += 15; state.teams.A.funds -= 15; state.teams.D.stability -= 10; } },
+                            B: { label: "你們深知政府修復基建後下一步就是奪回科技主導權，於是你們砸下資產，將所有剩餘電力用來啟動總部的自動防衛系統。", effect: (state) => { state.teams.C.funds -= 10; state.teams.C.stability += 15; state.teams.A.tech -= 15; } }
+                        }
+                    },
+                    "B_B_D_B_A_A_C": {
+                        text: "街頭的地下黑市在警笛聲中被砸毀、查抄，政府用鐵腕手段強行切斷了底層的加密通訊。然而，這場雷厲風行的掃蕩，讓勞工階級剛剛賺到手的黑市財富與非法電力外掛瞬間化為烏有。",
+                        choices: {
+                            A: { label: "你們向那些在掃蕩中走投無路的勞工黑客發放「企業特赦卡」，提供庇護所與高薪，把他們接進大樓內部的研發部。", effect: (state) => { state.teams.C.tech += 20; state.teams.C.funds -= 15; state.teams.A.stability -= 15; state.teams.D.funds += 10; } },
+                            B: { label: "你們看準政府剛打完高消耗的維穩戰、國庫空虛，主動送上大筆應急資金，但條件是政府必須交出電網與監控系統的主控權。", effect: (state) => { state.teams.C.funds -= 20; state.teams.C.tech += 15; state.teams.A.funds += 10; state.teams.A.tech -= 20; } }
+                        }
+                    },
+                    "B_B_D_B_A_B_C": {
+                        text: "警笛聲響徹底層，政府的徵調令將勞工中最強大的技術核心一網打盡。大批民間黑客被迫在荷槍實彈的監督下，不眠不休地為官方重組國家監控電網。",
+                        choices: {
+                            A: { label: "你們利用殘存的衛星頻寬，將政府工地上勞工在寒冬中被持槍看守、不眠不休做苦力的畫面瘋狂擴散。", effect: (state) => { state.teams.C.stability += 20; state.teams.C.tech += 10; state.teams.A.stability -= 20; state.teams.D.stability += 5; } },
+                            B: { label: "你們預判政府完工後會來清算商界，於是提前拋售、做空城市的所有實體資產與貨幣，換成硬通貨。", effect: (state) => { state.teams.C.funds += 20; state.teams.C.stability -= 15; state.teams.D.stability -= 10; state.teams.A.funds -= 10; } }
                         }
                     },
                     "DEFAULT": {
